@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NVH Scanner</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2D0B2D">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="icon.png">
+    <script src="https://unpkg.com/html5-qrcode"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Tabs Navigation -->
+        <nav class="tabs-nav">
+            <button class="tab-btn active" onclick="switchTab('scan')">Quét Mã</button>
+            <button class="tab-btn" onclick="switchTab('history')">Lịch Sử</button>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="tab-content">
+            <!-- Scan Tab -->
+            <section id="scan-view" class="view active">
+                <div class="card scanner-card">
+                    <div id="reader"></div>
+                    <div class="status-badge" id="scan-status">Đang tìm camera...</div>
+                </div>
+
+                <div class="card info-card">
+                    <h3>Thông tin đơn hàng</h3>
+                    <div class="info-content">
+                        <p><strong>Nội dung mã:</strong> <span id="scanned-result">Chưa có thông tin</span></p>
+                        <p id="time-display" style="font-size: 0.8em; color: #888;"></p>
+                    </div>
+                    <button id="send-btn" class="primary-btn glow" disabled onclick="sendData()">GỬI LÊN GOOGLE SHEETS</button>
+                </div>
+            </section>
+
+            <!-- History Tab -->
+            <section id="history-view" class="view">
+                <div class="history-controls">
+                    <button class="secondary-btn" onclick="loadHistory()">TẢI LẠI</button>
+                </div>
+                <div id="history-list" class="history-list">
+                    <!-- History items will be inserted here -->
+                    <p class="empty-msg">Đang tải lịch sử...</p>
+                </div>
+            </section>
+        </main>
+
+        <!-- Copyright -->
+        <footer class="footer">
+            <span class="copyright">Thực hiện bởi <i>NVH</i></span>
+        </footer>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>

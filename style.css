@@ -1,0 +1,200 @@
+:root {
+    --bg-color: #1A061A;
+    --surface-color: #2D0B2D;
+    --primary-color: #FFD700;
+    --text-color: #FFFFFF;
+    --gray-text: #888888;
+    --gold: #FFD700;
+    --glow: 0 0 10px rgba(255, 215, 0, 0.4);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    overflow: hidden;
+    height: 100vh;
+}
+
+.app-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+/* Tab Navigation */
+.tabs-nav {
+    background-color: var(--surface-color);
+    display: flex;
+    padding-top: 40px; /* Safe area for iOS */
+    border-bottom: 1px solid rgba(255, 215, 0, 0.1);
+}
+
+.tab-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    color: var(--gray-text);
+    padding: 15px;
+    font-size: 1rem;
+    font-weight: 600;
+    position: relative;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.tab-btn.active {
+    color: var(--primary-color);
+}
+
+.tab-btn.active::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 20%;
+    right: 20%;
+    height: 3px;
+    background-color: var(--primary-color);
+    border-radius: 3px 3px 0 0;
+}
+
+/* Views */
+.tab-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.view {
+    display: none;
+}
+
+.view.active {
+    display: block;
+}
+
+/* Card Style */
+.card {
+    background-color: var(--surface-color);
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(255, 215, 0, 0.2);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* Scanner */
+#reader {
+    width: 100%;
+    border-radius: 15px;
+    overflow: hidden;
+    background: #000;
+}
+
+.status-badge {
+    text-align: center;
+    font-size: 0.9rem;
+    color: var(--primary-color);
+    margin-top: 10px;
+}
+
+/* Info Card */
+.info-card h3 {
+    color: var(--primary-color);
+    margin-bottom: 15px;
+}
+
+.info-content p {
+    margin-bottom: 10px;
+}
+
+/* Buttons */
+.primary-btn {
+    width: 100%;
+    background-color: var(--primary-color);
+    color: var(--surface-color);
+    border: none;
+    padding: 15px;
+    border-radius: 15px;
+    font-weight: bold;
+    font-size: 1rem;
+    margin-top: 20px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.primary-btn:disabled {
+    background-color: var(--gray-text);
+    opacity: 0.5;
+}
+
+.glow:active:not(:disabled) {
+    box-shadow: 0 0 20px var(--primary-color);
+}
+
+.secondary-btn {
+    background: none;
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+    padding: 8px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+/* History List */
+.history-item {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    padding: 15px;
+    margin-bottom: 10px;
+}
+
+.history-item-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: var(--gray-text);
+    margin-bottom: 5px;
+}
+
+/* Copyright Footer */
+.footer {
+    padding: 10px;
+    background-color: var(--bg-color);
+}
+
+.copyright {
+    display: block;
+    text-align: right;
+    font-size: 0.7rem;
+    color: var(--gray-text);
+}
+
+.copyright i {
+    color: var(--primary-color);
+}
+
+/* Toast */
+.toast {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background-color: #333;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 30px;
+    z-index: 1000;
+    transition: 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+
+.toast.show {
+    transform: translateX(-50%) translateY(0);
+}
