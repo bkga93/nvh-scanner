@@ -447,10 +447,10 @@ function displayRemoteData(dataToDisplay = null) {
         <div class="history-item ${selectedRemoteItem && selectedRemoteItem.orderId === item.orderId ? 'selected' : ''}" 
              onclick='selectRemoteItem(${JSON.stringify(item).replace(/'/g, "&apos;")})'>
             <div class="history-item-header">
-                <strong>ID: ${item.orderId}</strong>
+                <strong>${item.content || 'N/A'}</strong>
                 <span class="history-item-time highlight-time">${item.scanTime}</span>
             </div>
-            <div class="history-item-content">${item.content}</div>
+            <div class="history-item-content" style="font-size: 0.75rem; opacity: 0.7;">ID: ${item.orderId}</div>
         </div>
     `).join('');
 }
@@ -461,18 +461,21 @@ function selectRemoteItem(item) {
 
     document.getElementById('item-detail-panel').style.display = 'block';
     document.getElementById('detail-time').innerText = item.scanTime;
+    document.getElementById('detail-content-val').innerText = item.content || '...';
     document.getElementById('detail-id').innerText = item.orderId;
-    document.getElementById('detail-content').innerText = item.content;
     
     // Cuộn xuống để xem chi tiết
     document.getElementById('item-detail-panel').scrollIntoView({ behavior: 'smooth' });
     
-    const timeEl = document.getElementById('detail-time');
-    timeEl.style.animation = 'none';
-    timeEl.offsetHeight; 
-    timeEl.style.animation = 'flashEffect 0.5s ease-out';
-    
-    showToast("Đã chọn ID: " + item.orderId);
+    showToast("Đã chọn đơn: " + (item.content || item.orderId));
+}
+
+function copyOrderCode() {
+    const code = document.getElementById('detail-content-val').innerText;
+    if (!code || code === '...') return;
+    navigator.clipboard.writeText(code).then(() => {
+        showToast("📋 Đã copy mã đơn hàng: " + code);
+    });
 }
 
 // --- LOGIC LỊCH SỬ TẠI MÁY ---
@@ -896,9 +899,10 @@ function filterReviewData() {
         list.innerHTML = filtered.slice(0, 10).map(item => `
             <div class="history-item" onclick='selectReviewItem(${JSON.stringify(item).replace(/'/g, "&apos;")})'>
                 <div class="history-item-header">
-                    <strong>ID: ${item.orderId}</strong>
+                    <strong>${item.content || item.orderId}</strong>
                     <span class="history-item-time">${item.scanTime}</span>
                 </div>
+                <div class="history-item-content" style="font-size: 0.7rem; opacity: 0.6;">ID: ${item.orderId}</div>
             </div>
         `).join('');
     } else {
@@ -908,19 +912,20 @@ function filterReviewData() {
 
 function selectReviewItem(item) {
     selectedReviewItem = item;
-    document.getElementById('review-order-id').value = item.orderId;
+    document.getElementById('review-order-id').value = item.content || item.orderId;
     document.getElementById('review-data-list').style.display = 'none';
     
-    // Hiển thị panel thông tin đơn đang chọn
+    // Hiển thị panel thông tin đơn đang chọn v1.6.9
     const panel = document.getElementById('review-detail-panel');
     panel.style.display = 'block';
-    document.getElementById('review-detail-id').innerText = item.orderId;
     document.getElementById('review-detail-time').innerText = item.scanTime;
+    document.getElementById('review-detail-content').innerText = item.content || '...';
+    document.getElementById('review-detail-id').innerText = item.orderId;
     
-    // Kiểm tra trạng thái video v1.6.8
+    // Kiểm tra trạng thái video
     checkVideoStatus(item.orderId);
     
-    showToast("Đã chọn đơn: " + item.orderId);
+    showToast("Đã chọn đơn: " + (item.content || item.orderId));
 }
 
 /* --- VIDEO STATUS & DOWNLOAD LOGIC v1.6.8 --- */

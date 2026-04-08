@@ -102,15 +102,15 @@
                     <div id="remote-data-list" class="history-list"></div>
                     <div id="item-detail-panel" class="detail-panel" style="display: none;">
                         <h4 class="detail-title">THÔNG TIN CHI TIẾT</h4>
+                        <div class="detail-row highlight-row"><span>Ngày quét:</span> <span id="detail-time" class="highlight-time">...</span></div>
                         <div class="detail-row">
-                            <span>ID đơn hàng:</span> 
+                            <span>Mã đơn hàng:</span> 
                             <div class="id-copy-group">
-                                <strong id="detail-id">...</strong>
-                                <button class="copy-btn" onclick="copyOrderId()">📋</button>
+                                <strong id="detail-content-val" style="color: var(--primary-color);">...</strong>
+                                <button class="copy-btn" onclick="copyOrderCode()">📋</button>
                             </div>
                         </div>
-                        <div class="detail-row highlight-row"><span>Ngày quét:</span> <span id="detail-time" class="highlight-time">...</span></div>
-                        <div class="detail-row"><span>Nội dung mã:</span> <div id="detail-content" class="detail-content-box">...</div></div>
+                        <div class="detail-row" style="opacity: 0.6; font-size: 0.75rem;"><span>ID hệ thống:</span> <span id="detail-id">...</span></div>
                     </div>
                 </section>
 
@@ -128,15 +128,16 @@
                     </div>
                     
                     <div id="review-detail-panel" class="detail-panel" style="display: none; margin-bottom: 20px;">
-                        <div class="detail-row"><span>Đang xem:</span> <strong id="review-detail-id" style="color: var(--primary-color);">...</strong></div>
                         <div class="detail-row highlight-row"><span>Thời gian:</span> <span id="review-detail-time" class="highlight-time">...</span></div>
+                        <div class="detail-row"><span>Mã đơn hàng:</span> <strong id="review-detail-content" style="color: var(--primary-color);">...</strong></div>
                         <div class="detail-row">
                             <span>Trạng thái:</span>
                             <div class="status-group">
-                                <span id="status-cloud" class="status-badge">☁️ Kiểm tra Cloud...</span>
-                                <span id="status-local" class="status-badge">📂 Kiểm tra Máy...</span>
+                                <span id="status-cloud" class="status-badge">☁️ Cloud</span>
+                                <span id="status-local" class="status-badge">📂 Máy</span>
                             </div>
                         </div>
+                        <div class="detail-row" style="opacity: 0.6; font-size: 0.75rem;"><span>ID hệ thống:</span> <span id="review-detail-id">...</span></div>
                     </div>
 
                     <div class="review-bottom-panel">
@@ -205,7 +206,7 @@
         </div>
 
         <footer class="footer">
-            <span class="copyright">Thực hiện bởi <i>NVH</i> — Version 1.6.8</span>
+            <span class="copyright">Thực hiện bởi <i>NVH</i> — Version 1.6.9</span>
         </footer>
     </div>
 
@@ -264,8 +265,9 @@
             </div>
 
             <div class="settings-group">
-                <button class="modal-btn btn-append" onclick="requestHDDPermission()" style="width: 100%;">CẤP QUYỀN LƯU Ổ CỨNG</button>
-                <div id="hdd-status" class="settings-hint">Chưa cấp quyền thư mục Local</div>
+                <label>Vị trí lưu Video (Ổ cứng)</label>
+                <button class="modal-btn btn-append" onclick="requestHDDPermission()" style="width: 100%;">CẤP QUYỀN THƯ MỤC</button>
+                <div id="hdd-status" class="settings-hint">Chưa chọn thư mục lưu trữ</div>
             </div>
 
             <!-- Changelog Section -->
@@ -273,6 +275,15 @@
             <div class="changelog-container">
                 <label>NHẬT KÝ THAY ĐỔI</label>
                 <div class="changelog-list">
+                    <div class="changelog-item">
+                        <span class="ver-tag">v1.6.9</span>
+                        <ul>
+                            <li>Tái cấu trúc bảng chi tiết: Ưu tiên Mã vận chuyển và Thời gian quét.</li>
+                            <li>Đồng bộ hóa tìm kiếm: Sử dụng Mã vận chuyển làm định danh chính.</li>
+                            <li>Bổ sung cài đặt "Vị trí lưu Video" trong menu Drawer.</li>
+                            <li>Di chuyển nút Copy sang dòng Mã vận chuyển.</li>
+                        </ul>
+                    </div>
                     <div class="changelog-item">
                         <span class="ver-tag">v1.6.8</span>
                         <ul>
