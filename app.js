@@ -635,7 +635,9 @@ window.onload = () => {
     if (cache) { remoteDataCache = JSON.parse(cache); displayRemoteData(); }
     fetchDataFromSheets(true);
     setTimeout(processSyncQueue, 2000);
-    setInterval(updateUploadIndicator, 3000); // Cập nhật trạng thái upload
+    setInterval(updateUploadIndicator, 3000);
+    // Tự động nhận diện camera lúc khởi động v1.7.2
+    setTimeout(updateCameraList, 1000);
 };
 
 // --- LOGIC PC MODE & RECORDING (NEW v1.6.5) ---
@@ -1170,12 +1172,19 @@ async function syncPlayPause() {
 async function refreshCameraList() {
     try {
         showToast("Đang yêu cầu quyền truy cập Camera...");
+        // Ép buộc yêu cầu quyền
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        
+        // Đợi 800ms để phần cứng và trình duyệt cập nhật danh sách thiết bị
+        showToast("⏳ Đang nhận diện phần cứng...");
+        await new Promise(r => setTimeout(r, 800));
+        
         stream.getTracks().forEach(track => track.stop());
         await updateCameraList();
         showToast("✔️ Danh sách Camera đã được cập nhật!");
     } catch (err) {
-        showToast("❌ Lỗi: " + err.message);
+        showToast("❌ Không thể lấy quyền Camera. Vui lòng kiểm tra biểu tượng 🔒 trên thanh địa chỉ!");
+        console.error("Refresh Cam Error:", err);
     }
 }
 
@@ -1199,19 +1208,26 @@ async function updateCameraList() {
     const sM2 = document.getElementById('monitor2-cam-select');
     try {
         const devices = await Html5Qrcode.getCameras();
+        console.log("Devices found:", devices);
+        
         if (devices && devices.length > 0) {
             const options = devices.map(d => `<option value="${d.id}">${d.label || 'Camera ' + d.id.substr(0,4)}</option>`).join('');
             sScanner.innerHTML = options;
             sM1.innerHTML = options;
             sM2.innerHTML = '<option value="">-- Không dùng --</option>' + options;
+            
             sScanner.value = localStorage.getItem('nvh_scanner_cam_id') || devices[0].id;
             sM1.value = localStorage.getItem('nvh_monitor1_cam_id') || devices[0].id;
             sM2.value = localStorage.getItem('nvh_monitor2_cam_id') || "";
         } else {
-            const noCam = '<option value="">Không tìm thấy Camera</option>';
+            const noCam = '<option value="">❌ Không tìm thấy thiết bị</option>';
             sScanner.innerHTML = noCam; sM1.innerHTML = noCam; sM2.innerHTML = noCam;
         }
-    } catch (err) { console.error("Camera detection error:", err); }
+    } catch (err) { 
+        console.error("Camera detection error:", err); 
+        const errOpt = '<option value="">⚠️ Lỗi nhận diện</option>';
+        sScanner.innerHTML = errOpt; sM1.innerHTML = errOpt; sM2.innerHTML = errOpt;
+    }
 }
 
 // --- LOGIC PC MODE ACTIONS v1.7.1 ---
