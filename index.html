@@ -59,17 +59,16 @@
                     </div>
 
                     <div class="controls-container">
-                        <button id="start-btn" class="main-scan-btn glow" onclick="toggleScanner()">
-                            <span id="btn-text">BẮT ĐẦU QUÉT</span>
-                            <div class="btn-subtext" id="btn-subtext">Nhấn để khởi động Camera</div>
+                        <button id="pc-scan-btn" class="pc-action-btn" onclick="startScanning()">
+                            <span class="btn-main-text">BẮT ĐẦU QUÉT</span>
+                            <span class="btn-sub-text">Nhấn để kích hoạt Camera</span>
                         </button>
-                    </div>
-
-                    <!-- Last Scan Status -->
-                    <div class="last-scan-status" id="last-scan-info">
-                        <div class="status-header">Mã vừa quét:</div>
-                        <div class="status-content" id="scanned-result">Đang chờ...</div>
-                        <div class="status-footer" id="sync-status">Sẵn sàng</div>
+                        
+                        <div class="pc-status-card">
+                            <span class="status-label">Mã vừa quét:</span>
+                            <div id="pc-last-scanned" class="status-value">Đang chờ...</div>
+                            <div id="pc-status-msg" class="status-hint">Sẵn sàng</div>
+                        </div>
                     </div>
                 </section>
 
@@ -205,7 +204,7 @@
         </div>
 
         <footer class="footer">
-            <span class="copyright">Thực hiện bởi <i>NVH</i> — Version 1.7.0</span>
+            <span class="copyright">Thực hiện bởi <i>NVH</i> — Version 1.7.1</span>
         </footer>
     </div>
 
@@ -248,6 +247,40 @@
                     <span class="slider"></span>
                 </label>
             </div>
+
+            <div class="settings-divider"></div>
+
+            <div class="settings-group">
+                <label>Vị trí lưu Video (Ổ cứng)</label>
+                <button class="modal-btn btn-append" onclick="requestHDDPermission()" style="width: 100%;">CẤP QUYỀN THƯ MỤC</button>
+                <div id="hdd-status" class="settings-hint">Chỉ hỗ trợ PC Chrome/Edge</div>
+                <button class="modal-btn btn-append" onclick="clearLocalVideoCache()" style="width: 100%; background: var(--danger); margin-top: 10px;">XOÁ BỘ NHỚ VIDEO</button>
+                <div class="settings-hint">Giải phóng dung lượng iPhone/Mobile</div>
+            </div>
+
+            <div class="settings-divider"></div>
+
+            <div class="settings-group">
+                <label style="color: var(--primary-color);">CẤU HÌNH CAMERA</label>
+                <button class="modal-btn" onclick="refreshCameraList()" style="width: 100%; margin-bottom: 12px; font-size: 0.8rem; background: #2a2a4a; border: 1px solid var(--primary-color);">
+                    🔄 LÀM MỚI DANH SÁCH CAMERA
+                </button>
+                
+                <div class="cam-select-item" style="margin-bottom: 10px;">
+                    <label style="font-size: 0.8rem;">1. Camera Quét (Scanner)</label>
+                    <select id="scanner-cam-select" class="settings-select" onchange="saveDeviceSettings()"></select>
+                </div>
+                <div class="cam-select-item" style="margin-bottom: 10px;">
+                    <label style="font-size: 0.8rem;">2. Camera Góc 1 (Chính)</label>
+                    <select id="monitor1-cam-select" class="settings-select" onchange="saveDeviceSettings()"></select>
+                </div>
+                <div class="cam-select-item" style="margin-bottom: 10px;">
+                    <label style="font-size: 0.8rem;">3. Camera Góc 2 (Phụ)</label>
+                    <select id="monitor2-cam-select" class="settings-select" onchange="saveDeviceSettings()"></select>
+                </div>
+            </div>
+
+            <div class="settings-divider"></div>
 
             <div id="pc-camera-2-group" class="settings-group" style="display: none;">
                 <label>Thiết bị Camera 2 (Toàn cảnh)</label>

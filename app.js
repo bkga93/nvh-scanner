@@ -1099,8 +1099,6 @@ function lookupAndPlayVideo() {
         showToast("⚠️ Vui lòng nhập hoặc chọn mã đơn!");
         return;
     }
-
-    // Ưu tiên tìm trong Local HDD (Yêu cầu người dùng chọn file vì bảo mật trình duyệt)
     showToast("Vui lòng chọn video của mã " + orderId);
     promptLocalFiles(orderId);
 }
@@ -1113,32 +1111,23 @@ async function promptLocalFiles(targetOrderId = null) {
     input.onchange = async (e) => {
         const files = Array.from(e.target.files);
         if (files.length < 1) return;
-
         const v1 = document.getElementById('video-review-1');
         const v2 = document.getElementById('video-review-2');
         let matched = false;
-
         files.forEach(file => {
-            // Kiểm tra xem file có chứa mã đơn hàng không
             const fileName = file.name.toUpperCase();
             const orderId = (targetOrderId || "").toUpperCase();
-            
-            if (orderId && !fileName.includes(orderId)) {
-                return; // Bỏ qua file không khớp mã đơn
-            }
-
+            if (orderId && !fileName.includes(orderId)) return;
             const url = URL.createObjectURL(file);
             if (fileName.includes('CAM1')) { v1.src = url; matched = true; }
             else if (fileName.includes('CAM2')) { v2.src = url; matched = true; }
             else if (files.length === 1) { v1.src = url; matched = true; }
         });
-
         if (!matched) {
             showToast("❌ Không tìm thấy video hợp lệ cho mã đơn này!");
-            v1.src = ""; v2.src = "";
         } else {
             showToast("✔️ Đã tải video thành công!");
-            syncPlayPause(); // Tự động phát
+            syncPlayPause();
         }
     };
     input.click();
@@ -1147,13 +1136,10 @@ async function promptLocalFiles(targetOrderId = null) {
 async function syncPlayPause() {
     const v1 = document.getElementById('video-review-1');
     const v2 = document.getElementById('video-review-2');
-    
     if (!v1.src || !v2.src) {
-        // Nếu chưa có nguồn, thử load từ HDD hoặc IDB (Mobile)
         if (selectedReviewItem) {
             const orderId = selectedReviewItem.orderId;
             let blob1, blob2;
-
             if (hddFolderHandle) {
                 try {
                     const h1 = await hddFolderHandle.getFileHandle(`${orderId}_CAM1.webm`);
@@ -1162,12 +1148,10 @@ async function syncPlayPause() {
                     blob2 = await h2.getFile();
                 } catch(e) {}
             }
-            
             if (!blob1 && db) {
                 blob1 = await getVideoFromIDB(`${orderId}_CAM1.webm`);
                 blob2 = await getVideoFromIDB(`${orderId}_CAM2.webm`);
             }
-
             if (blob1) {
                 v1.src = URL.createObjectURL(blob1);
                 v2.src = URL.createObjectURL(blob2);
@@ -1175,55 +1159,129 @@ async function syncPlayPause() {
                 showToast("⚠️ Không tìm thấy video trên máy!");
                 return;
             }
-        } else {
-            return;
-        }
+        } else return;
     }
-    
     if (v1.paused) {
         v1.play();
-        if (v2.src) {
-            v2.currentTime = v1.currentTime;
-            v2.play();
-        }
-    } else {
-        v1.pause();
-        v2.pause();
+        if (v2.src) { v2.currentTime = v1.currentTime; v2.play(); }
+    } else { v1.pause(); v2.pause(); }
+}
+
+async function refreshCameraList() {
+    try {
+        showToast("Đang yêu cầu quyền truy cập Camera...");
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        stream.getTracks().forEach(track => track.stop());
+        await updateCameraList();
+        showToast("✔️ Danh sách Camera đã được cập nhật!");
+    } catch (err) {
+        showToast("❌ Lỗi: " + err.message);
     }
 }
 
 function saveDeviceSettings() {
     localStorage.setItem('nvh_sound_type', document.getElementById('sound-select').value);
     localStorage.setItem('nvh_vibrate', document.getElementById('vibrate-toggle').checked);
-    localStorage.setItem('nvh_camera_id', document.getElementById('camera-select').value);
-    
-    const cam2 = document.getElementById('camera-2-select').value;
-    if (cam2) localStorage.setItem('nvh_camera_2_id', cam2);
+    localStorage.setItem('nvh_scanner_cam_id', document.getElementById('scanner-cam-select').value);
+    localStorage.setItem('nvh_monitor1_cam_id', document.getElementById('monitor1-cam-select').value);
+    localStorage.setItem('nvh_monitor2_cam_id', document.getElementById('monitor2-cam-select').value);
 
-    localStorage.setItem('nvh_drive_folder_id', document.getElementById('drive-folder-id').value);
+    localStorage.setItem('nvh_drive_folder_id', document.getElementById('drive-folder-id')?.value || "");
 
-    // Nếu đang quét mà đổi camera chính, khởi động lại
     if (isScanning) {
-        stopScanner().then(() => toggleScanner());
+        stopScanner().then(() => { if (!pcMode) toggleScanner(); else startScanning(); });
     }
 }
 
 async function updateCameraList() {
-    const select1 = document.getElementById('camera-select');
-    const select2 = document.getElementById('camera-2-select');
+    const sScanner = document.getElementById('scanner-cam-select');
+    const sM1 = document.getElementById('monitor1-cam-select');
+    const sM2 = document.getElementById('monitor2-cam-select');
     try {
         const devices = await Html5Qrcode.getCameras();
         if (devices && devices.length > 0) {
-            const options = devices.map(d => 
-                `<option value="${d.id}">${d.label || 'Camera ' + d.id.substr(0,4)}</option>`
-            ).join('');
-            
-            select1.innerHTML = options;
-            select2.innerHTML = '<option value="">-- Không dùng --</option>' + options;
-            
-            // Khôi phục lựa chọn
-            select1.value = localStorage.getItem('nvh_camera_id') || devices[0].id;
-            select2.value = localStorage.getItem('nvh_camera_2_id') || "";
+            const options = devices.map(d => `<option value="${d.id}">${d.label || 'Camera ' + d.id.substr(0,4)}</option>`).join('');
+            sScanner.innerHTML = options;
+            sM1.innerHTML = options;
+            sM2.innerHTML = '<option value="">-- Không dùng --</option>' + options;
+            sScanner.value = localStorage.getItem('nvh_scanner_cam_id') || devices[0].id;
+            sM1.value = localStorage.getItem('nvh_monitor1_cam_id') || devices[0].id;
+            sM2.value = localStorage.getItem('nvh_monitor2_cam_id') || "";
+        } else {
+            const noCam = '<option value="">Không tìm thấy Camera</option>';
+            sScanner.innerHTML = noCam; sM1.innerHTML = noCam; sM2.innerHTML = noCam;
         }
     } catch (err) { console.error("Camera detection error:", err); }
+}
+
+// --- LOGIC PC MODE ACTIONS v1.7.1 ---
+
+async function startScanning() {
+    if (isScanning) { stopScanner(); return; }
+    const camId = document.getElementById('scanner-cam-select').value;
+    if (!camId) { showToast("⚠️ Vui lòng chọn Camera Quét!"); return; }
+
+    const btn = document.getElementById('pc-scan-btn');
+    const mainText = btn.querySelector('.btn-main-text');
+    
+    try {
+        if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
+        await html5QrCode.start(camId, { fps: 10, qrbox: { width: 250, height: 250 } }, onScanSuccess);
+        isScanning = true;
+        mainText.innerText = "DỪNG QUÉT";
+        btn.classList.add('active');
+        showToast("✔️ Đang quét mã...");
+        
+        // Tự động bật monitoring nếu đang ở PC Mode
+        if (pcMode) startDualMonitoring();
+    } catch (err) {
+        showToast("❌ Không thể khởi động Camera quét: " + err);
+    }
+}
+
+async function startDualMonitoring() {
+    const cam1Id = document.getElementById('monitor1-cam-select').value;
+    const cam2Id = document.getElementById('monitor2-cam-select').value;
+    const v1 = document.getElementById('pc-video-1');
+    const v2 = document.getElementById('pc-video-2');
+
+    if (!cam1Id) return;
+
+    try {
+        // Stream 1 (Góc Cận)
+        const s1 = await navigator.mediaDevices.getUserMedia({ video: { deviceId: cam1Id } });
+        v1.srcObject = s1;
+        recorderStreams[0] = s1;
+        document.getElementById('monitor-cam-1').style.display = 'none';
+
+        // Stream 2 (Góc Toàn) nếu chọn
+        if (cam2Id) {
+            const s2 = await navigator.mediaDevices.getUserMedia({ video: { deviceId: cam2Id } });
+            v2.srcObject = s2;
+            recorderStreams[1] = s2;
+            document.getElementById('monitor-cam-2').style.display = 'none';
+        }
+    } catch (err) {
+        showToast("❌ Lỗi khởi động giám sát: " + err);
+    }
+}
+
+function stopScanner() {
+    return new Promise((resolve) => {
+        if (!html5QrCode) return resolve();
+        html5QrCode.stop().then(() => {
+            isScanning = false;
+            const btn = document.getElementById('pc-scan-btn');
+            if (btn) {
+                btn.querySelector('.btn-main-text').innerText = "BẮT ĐẦU QUÉT";
+                btn.classList.remove('active');
+            }
+            // Stop monitoring streams
+            recorderStreams.forEach(s => s.getTracks().forEach(t => t.stop()));
+            recorderStreams = [];
+            document.getElementById('monitor-cam-1').style.display = 'flex';
+            document.getElementById('monitor-cam-2').style.display = 'flex';
+            resolve();
+        }).catch(err => { console.error(err); resolve(); });
+    });
 }
