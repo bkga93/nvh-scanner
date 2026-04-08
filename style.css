@@ -300,6 +300,46 @@ body {
     padding-top: 10px;
 }
 
+/* Search Box styling v1.6.5 */
+.search-container {
+    margin-bottom: 20px;
+    display: flex;
+    gap: 10px;
+}
+
+.search-box {
+    display: flex;
+    flex: 1;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 215, 0, 0.2);
+    overflow: hidden;
+    height: 50px;
+}
+
+.search-box input {
+    flex: 1;
+    background: none;
+    border: none;
+    padding: 0 15px;
+    color: white;
+    font-size: 0.9rem;
+    outline: none;
+}
+
+.search-scan-btn {
+    width: 55px;
+    background-color: var(--accent-color);
+    border: none;
+    color: var(--primary-color);
+    cursor: pointer;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-left: 1px solid rgba(255, 215, 0, 0.1);
+}
+
 .history-item {
     background-color: rgba(255, 255, 255, 0.04);
     padding: 15px;
@@ -496,10 +536,11 @@ body {
 
 /* Review Tab Player */
 .dual-player-container {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
-    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+    overflow-y: auto;
 }
 
 .player-box {
@@ -512,6 +553,8 @@ body {
 
 .player-box video {
     width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .player-label {
@@ -533,15 +576,54 @@ body {
 
 .sync-play-btn {
     flex: 1;
-    padding: 12px;
-    background-color: var(--primary-color);
+    padding: 15px;
+    background: linear-gradient(135deg, var(--primary-color), #E6C200);
     color: var(--surface-color);
     border: none;
-    border-radius: 10px;
-    font-weight: bold;
+    border-radius: 14px;
+    font-weight: 900;
+    font-size: 0.9rem;
+    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2);
 }
 
-/* Common UI */
+.sync-play-btn.secondary {
+    background: rgba(255, 255, 255, 0.08);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.review-bottom-panel {
+    background-color: rgba(0, 0, 0, 0.2);
+    padding: 15px;
+    border-radius: 20px;
+    margin-top: 10px;
+    border: 1px solid rgba(255, 215, 0, 0.1);
+}
+
+.review-bottom-panel .search-container {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.refresh-btn-inline {
+    width: 60px;
+    height: 50px;
+    background: var(--accent-color);
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    border-radius: 12px;
+    color: var(--primary-color);
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.review-controls {
+    display: flex;
+    gap: 10px;
+}
 .drawer-overlay {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;

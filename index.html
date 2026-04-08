@@ -107,15 +107,6 @@
 
                 <!-- Review View (Synchronized Playback) -->
                 <section id="review-view" class="view" style="display: none;">
-                    <div class="search-container">
-                         <div class="search-box">
-                            <input type="text" id="review-order-id" placeholder="Nhập mã đơn để xem lại...">
-                            <button class="search-scan-btn" onclick="lookupAndPlayVideo()">
-                                <span>🔍</span>
-                            </button>
-                        </div>
-                    </div>
-
                     <div class="dual-player-container">
                         <div class="player-box">
                             <video id="video-review-1" controls playsinline></video>
@@ -127,9 +118,23 @@
                         </div>
                     </div>
                     
-                    <div class="review-controls">
-                        <button class="sync-play-btn" onclick="syncPlayPause()">PHÁT ĐỒNG BỘ</button>
-                        <button class="sync-play-btn" onclick="promptLocalFiles()">CHỌN FILE THỦ CÔNG</button>
+                    <div class="review-bottom-panel">
+                        <div class="search-container">
+                             <div class="search-box">
+                                <input type="text" id="review-order-id" placeholder="Nhập mã đơn...">
+                                <button class="search-scan-btn" onclick="lookupAndPlayVideo()">
+                                    <span>🔍</span>
+                                </button>
+                            </div>
+                            <button class="refresh-btn-inline" onclick="fetchDataFromSheets()">
+                                <span>🔄</span>
+                            </button>
+                        </div>
+                        
+                        <div class="review-controls">
+                            <button class="sync-play-btn glow" onclick="syncPlayPause()">PHÁT ĐỒNG BỘ</button>
+                            <button class="sync-play-btn secondary" onclick="promptLocalFiles()">CHỌN FILE</button>
+                        </div>
                     </div>
                 </section>
             </main>
