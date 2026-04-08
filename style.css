@@ -56,7 +56,7 @@ body {
 .tabs-nav {
     display: flex;
     background-color: var(--surface-color);
-    padding-top: 0; /* Đưa lên sát header */
+    padding-top: 50px; /* Chừa chỗ cho Menu trôi phía trên */
     border-bottom: 1px solid rgba(255, 215, 0, 0.1);
 }
 
@@ -97,12 +97,14 @@ body {
 /* App Header Context */
 .app-header {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
-    padding: 35px 15px 5px 15px; /* Tăng top cho notch, giảm bottom để thu gọn */
-    border-bottom: 1px solid rgba(255, 215, 0, 0.1);
-    background-color: #1A051A;
+    padding: 30px 10px 0 10px; /* Sát trên cùng của status bar */
+    background-color: transparent;
     z-index: 100;
+    position: absolute;
+    top: 0;
+    left: 0;
 }
 
 .menu-btn {
