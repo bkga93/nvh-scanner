@@ -16,8 +16,9 @@
     <div class="app-container">
         <!-- App Header -->
         <header class="app-header">
-            <h1 class="app-title">NVH SCANNER</h1>
-            <button class="settings-entry-btn" onclick="toggleSettingsModal(true)">⚙️</button>
+            <button class="menu-btn" onclick="toggleDrawer(true)">☰</button>
+            <h1 class="app-title">TAYCAMTOT</h1>
+            <div style="width: 46px;"></div> <!-- Spacer to center title -->
         </header>
 
         <!-- Flash Overlay (Success effect) -->
@@ -139,15 +140,22 @@
 
         <!-- Copyright & Version -->
         <footer class="footer">
-            <span class="copyright">Thực hiện bởi <i>NVH</i> — Version 1.2</span>
+            <span class="copyright">Thực hiện bởi <i>NVH</i> — Version 1.3</span>
         </footer>
     </div>
 
-    <!-- Settings Modal -->
-    <div id="settings-modal" class="modal-overlay">
-        <div class="modal-content settings-screen">
-            <h3>CÀI ĐẶT THIẾT BỊ</h3>
-            
+    <!-- Sidebar (Drawer) Overlay -->
+    <div id="drawer-overlay" class="drawer-overlay" onclick="toggleDrawer(false)"></div>
+
+    <!-- Side Sidebar (Drawer) -->
+    <div id="side-drawer" class="side-drawer">
+        <div class="drawer-header">
+            <h3>CÀI ĐẶT & THÔNG TIN</h3>
+            <button class="close-drawer" onclick="toggleDrawer(false)">×</button>
+        </div>
+        
+        <div class="drawer-content">
+            <!-- Sound & Vibrate Section -->
             <div class="settings-group">
                 <label>Kiểu âm thanh thông báo</label>
                 <select id="sound-select" class="settings-select" onchange="previewSound()">
@@ -161,36 +169,51 @@
             <div class="settings-group toggle-group">
                 <label>Rung khi bắt mã</label>
                 <div class="toggle-switch">
-                    <input type="checkbox" id="vibrate-toggle" checked>
+                    <input type="checkbox" id="vibrate-toggle" onchange="saveDeviceSettings()" checked>
                     <span class="slider"></span>
                 </div>
             </div>
 
-            <!-- Changelog Section -->
+            <!-- Changelog Section (Last 5) -->
             <div class="settings-divider"></div>
             <div class="changelog-container">
                 <label>NHẬT KÝ THAY ĐỔI</label>
                 <div class="changelog-list">
                     <div class="changelog-item">
+                        <span class="ver-tag">v1.3</span>
+                        <ul>
+                            <li>Đổi tên hệ thống thành TAYCAMTOT.</li>
+                            <li>Nâng cấp Menu trượt (Sidebar) từ bên trái.</li>
+                            <li>Thu nhỏ tiêu đề, chuyển Menu sang bên trái.</li>
+                            <li>Tối ưu hóa Nhật ký thay đổi (Hiển thị 5 bản gần nhất).</li>
+                        </ul>
+                    </div>
+                    <div class="changelog-item" style="opacity:0.8">
                         <span class="ver-tag">v1.2</span>
                         <ul>
                             <li>Di chuyển nút Cài đặt lên đầu App cho dễ bấm.</li>
-                            <li>Gộp thông tin phiên bản vào cùng hàng ở chân trang.</li>
-                            <li>Thêm mục Nhật ký thay đổi ngay trong Cài đặt.</li>
+                            <li>Gộp thông tin phiên bản vào chân trang.</li>
                         </ul>
                     </div>
                     <div class="changelog-item" style="opacity:0.6">
                         <span class="ver-tag">v1.1</span>
                         <ul>
-                            <li>Thêm 4 kiểu chuông thông báo to và rõ hơn.</li>
-                            <li>Thêm tính năng rung khi bắt mã thành công.</li>
+                            <li>Thêm 4 kiểu chuông và tính năng rung.</li>
                             <li>Khôi phục hoàn toàn khung quét mã vuông 1:1.</li>
+                        </ul>
+                    </div>
+                    <div class="changelog-item" style="opacity:0.3">
+                        <span class="ver-tag">v1.0</span>
+                        <ul>
+                            <li>Phiên bản khởi tạo - Giao diện Dark Plum & Gold.</li>
                         </ul>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <button class="modal-btn btn-overwrite" onclick="toggleSettingsModal(false)">LƯU & ĐÓNG</button>
+        <div class="drawer-footer">
+            <button class="modal-btn btn-overwrite" onclick="toggleDrawer(false)">HOÀN TẤT</button>
         </div>
     </div>
 

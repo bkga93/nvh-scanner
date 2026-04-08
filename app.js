@@ -484,26 +484,34 @@ function validatePasscode() {
     }
 }
 
-// --- LOGIC CÀI ĐẶT ---
-function toggleSettingsModal(show) {
-    const modal = document.getElementById('settings-modal');
+// --- LOGIC SIDEBAR (DRAWER) ---
+function toggleDrawer(show) {
+    const drawer = document.getElementById('side-drawer');
+    const overlay = document.getElementById('drawer-overlay');
+    
     if (show) {
-        // Load cấu hình hiện tại lên UI
+        // Load cấu hình lên UI trước khi hiện
         document.getElementById('sound-select').value = localStorage.getItem('nvh_sound_type') || 'standard';
         document.getElementById('vibrate-toggle').checked = localStorage.getItem('nvh_vibrate') !== 'false';
-        modal.style.display = 'flex';
+        
+        drawer.classList.add('active');
+        overlay.classList.add('active');
     } else {
-        // Lưu cấu hình từ UI vào localStorage
-        localStorage.setItem('nvh_sound_type', document.getElementById('sound-select').value);
-        localStorage.setItem('nvh_vibrate', document.getElementById('vibrate-toggle').checked);
-        modal.style.display = 'none';
-        showToast("Đã lưu cài đặt!");
+        drawer.classList.remove('active');
+        overlay.classList.remove('active');
     }
+}
+
+function saveDeviceSettings() {
+    localStorage.setItem('nvh_sound_type', document.getElementById('sound-select').value);
+    localStorage.setItem('nvh_vibrate', document.getElementById('vibrate-toggle').checked);
+    // Không đóng drawer ngay để người dùng có thể test âm thanh
 }
 
 function previewSound() {
     const key = document.getElementById('sound-select').value;
     playBeep(key);
+    saveDeviceSettings(); // Lưu ngay khi đổi âm thanh
 }
 
 window.onload = () => {
