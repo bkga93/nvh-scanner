@@ -99,17 +99,18 @@ async function toggleScanner() {
     if (!isScanning) {
         try {
             if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
+            const deviceId = localStorage.getItem('nvh_camera_id');
+            const cameraConfig = deviceId ? { deviceId: { exact: deviceId } } : { facingMode: "environment" };
+
             playBeep();
             await html5QrCode.start(
-                { facingMode: "environment" },
+                cameraConfig,
                 { 
                     fps: 25, 
                     qrbox: (w, h) => {
-                        // Trình quét sẽ nhận diện trong toàn bộ khung vuông 1:1
                         const size = Math.min(w, h);
                         return { width: size, height: size };
                     },
-                    // Tắt vùng mờ tự động của thư viện để dùng khung thủ công của chúng ta
                     showViewFinder: false 
                 },
                 onScanSuccess
@@ -494,6 +495,8 @@ function toggleDrawer(show) {
         document.getElementById('sound-select').value = localStorage.getItem('nvh_sound_type') || 'standard';
         document.getElementById('vibrate-toggle').checked = localStorage.getItem('nvh_vibrate') !== 'false';
         
+        updateCameraList(); // Cập nhật danh sách camera khi mở menu
+        
         drawer.classList.add('active');
         overlay.classList.add('active');
     } else {
@@ -502,10 +505,30 @@ function toggleDrawer(show) {
     }
 }
 
+async function updateCameraList() {
+    const select = document.getElementById('camera-select');
+    try {
+        const devices = await Html5Qrcode.getCameras();
+        if (devices && devices.length > 0) {
+            select.innerHTML = devices.map(d => 
+                `<option value="${d.id}" ${localStorage.getItem('nvh_camera_id') === d.id ? 'selected' : ''}>${d.label || 'Camera ' + d.id.substr(0,4)}</option>`
+            ).join('');
+        } else {
+            select.innerHTML = `<option value="">Không tìm thấy camera</option>`;
+        }
+    } catch (err) {
+        select.innerHTML = `<option value="">Lỗi: Quyền truy cập</option>`;
+    }
+}
+
 function saveDeviceSettings() {
     localStorage.setItem('nvh_sound_type', document.getElementById('sound-select').value);
     localStorage.setItem('nvh_vibrate', document.getElementById('vibrate-toggle').checked);
-    // Không đóng drawer ngay để người dùng có thể test âm thanh
+    localStorage.setItem('nvh_camera_id', document.getElementById('camera-select').value);
+    // Nếu đang quét mà đổi camera, khởi động lại để áp dụng
+    if (isScanning) {
+        stopScanner().then(() => toggleScanner());
+    }
 }
 
 function previewSound() {

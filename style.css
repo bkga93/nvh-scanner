@@ -696,11 +696,12 @@ body {
     list-style-type: circle;
 }
 
-.changelog-item li {
-    font-size: 0.75rem;
+.settings-hint {
+    font-size: 0.65rem;
     color: var(--gray-text);
-    margin-bottom: 5px;
-    line-height: 1.4;
+    margin-top: 8px;
+    opacity: 0.7;
+    font-style: italic;
 }
 
 /* Settings Screen UI */

@@ -133,7 +133,7 @@
 
         <!-- Copyright & Version -->
         <footer class="footer">
-            <span class="copyright">Thực hiện bởi <i>NVH</i> — Version 1.4.2</span>
+            <span class="copyright">Thực hiện bởi <i>NVH</i> — Version 1.5</span>
         </footer>
     </div>
 
@@ -167,24 +167,32 @@
                 </div>
             </div>
 
+            <div class="settings-group">
+                <label>Thiết bị Camera</label>
+                <select id="camera-select" class="settings-select" onchange="saveDeviceSettings()">
+                    <option value="">Đang dò tìm camera...</option>
+                </select>
+                <div class="settings-hint">Chọn camera phù hợp nếu máy có nhiều camera</div>
+            </div>
+
             <!-- Changelog Section (Last 5) -->
             <div class="settings-divider"></div>
             <div class="changelog-container">
                 <label>NHẬT KÝ THAY ĐỔI</label>
                 <div class="changelog-list">
                     <div class="changelog-item">
+                        <span class="ver-tag">v1.5</span>
+                        <ul>
+                            <li>Tính năng cao cấp: Cho phép tùy chọn Camera cụ thể.</li>
+                            <li>Hỗ trợ tốt cho thiết bị Laptop/Macbook và Webcam rời.</li>
+                            <li>Ghi nhớ thiết bị camera ưa thích cho lần sau.</li>
+                        </ul>
+                    </div>
+                    <div class="changelog-item" style="opacity:0.8">
                         <span class="ver-tag">v1.4.2</span>
                         <ul>
                             <li>Gộp nút Menu vào cùng hàng với các Tab điều hướng.</li>
                             <li>Tối ưu hóa vị trí sát mép Dynamic Island cho iPhone.</li>
-                            <li>Loại bỏ hoàn toàn các thanh Header thừa.</li>
-                        </ul>
-                    </div>
-                    <div class="changelog-item" style="opacity:0.8">
-                        <span class="ver-tag">v1.4</span>
-                        <ul>
-                            <li>Loại bỏ tiêu đề TAYCAMTOT để tối ưu diện tích.</li>
-                            <li>Thử nghiệm đưa Menu lên vị trí cao nhất.</li>
                         </ul>
                     </div>
                     <div class="changelog-item" style="opacity:0.6">
