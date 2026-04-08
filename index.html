@@ -30,44 +30,88 @@
             <main class="tab-content">
                 <!-- Scan View -->
                 <section id="scan-view" class="view active">
-                    <!-- Recording Indicator -->
-                    <div id="recording-status" class="recording-indicator" style="display: none;">
-                        <span class="rec-dot"></span> 
-                        <span id="rec-timer">00:00</span>
-                        <button class="stop-rec-btn" onclick="stopRecordingManually()">DỪNG QUAY</button>
-                    </div>
+                    <!-- GIAO DIỆN MOBILE (Mặc định) -->
+                    <div id="mobile-scan-ui">
+                        <div class="mode-selector-container">
+                            <div class="mode-switch">
+                                <input type="radio" name="scanMode" id="modeSingle" value="single" checked>
+                                <label for="modeSingle">Quét từng mã</label>
+                                <input type="radio" name="scanMode" id="modeContinuous" value="continuous">
+                                <label for="modeContinuous">Quét liên tục</label>
+                            </div>
+                        </div>
 
-                    <!-- Mode Selector -->
-                    <div class="mode-selector-container">
-                        <div class="mode-switch">
-                            <input type="radio" name="scanMode" id="modeSingle" value="single" checked>
-                            <label for="modeSingle">Quét từng mã</label>
-                            <input type="radio" name="scanMode" id="modeContinuous" value="continuous">
-                            <label for="modeContinuous">Quét liên tục</label>
+                        <div class="scanner-container">
+                            <div id="reader"></div>
+                            <div class="scan-overlay">
+                                <div class="corner tl"></div><div class="corner tr"></div>
+                                <div class="corner bl"></div><div class="corner br"></div>
+                            </div>
+                        </div>
+
+                        <div class="controls-container">
+                            <button class="pc-action-btn" onclick="toggleScanner()">
+                                <span class="btn-main-text">BẮT ĐẦU QUÉT</span>
+                                <span class="btn-sub-text">Nhấn để kích hoạt Camera</span>
+                            </button>
+                            <div class="pc-status-card">
+                                <span class="status-label">Mã vừa quét:</span>
+                                <div id="pc-last-scanned" class="status-value">Đang chờ...</div>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Main Scanner UI -->
-                    <div class="scanner-container" id="scanner-ui">
-                        <div id="reader"></div>
-                        <div class="scan-overlay" id="scan-overlay-frame">
-                            <div class="corner tl"></div>
-                            <div class="corner tr"></div>
-                            <div class="corner bl"></div>
-                            <div class="corner br"></div>
-                        </div>
-                    </div>
+                    <!-- GIAO DIỆN PC PRO (v1.9.5) -->
+                    <div id="pc-pro-ui">
+                        <div class="pc-layout-wrapper">
+                            <!-- Cột Trái: Giống Mobile -->
+                            <div class="pc-left-col">
+                                <h3 style="color: var(--primary-color); font-size: 0.9rem; margin-bottom: 10px;">BỘ QUÉT MÃ ĐƠN</h3>
+                                <div id="pc-reader-container" class="scanner-container" style="height: 250px;">
+                                    <!-- Reader sẽ được di chuyển vào đây bằng JS -->
+                                </div>
+                                <div class="pc-status-card">
+                                    <span class="status-label">MÃ VỪA QUÉT:</span>
+                                    <div id="pc-pro-last-scanned" class="status-value" style="font-size: 1.8rem;">Đang chờ...</div>
+                                    <div id="pc-pro-status-msg" class="status-hint">Sẵn sàng</div>
+                                </div>
+                                <button class="pc-action-btn" onclick="toggleScanner()" style="margin-top: auto;">
+                                    <span class="btn-main-text">BẮT ĐẦU QUÉT</span>
+                                </button>
+                            </div>
 
-                    <div class="controls-container">
-                        <button id="pc-scan-btn" class="pc-action-btn" onclick="toggleScanner()">
-                            <span class="btn-main-text">BẮT ĐẦU QUÉT</span>
-                            <span class="btn-sub-text">Nhấn để kích hoạt Camera</span>
-                        </button>
-                        
-                        <div class="pc-status-card">
-                            <span class="status-label">Mã vừa quét:</span>
-                            <div id="pc-last-scanned" class="status-value">Đang chờ...</div>
-                            <div id="pc-status-msg" class="status-hint">Sẵn sàng</div>
+                            <!-- Cột Phải: Giám sát & Ghi hình -->
+                            <div class="pc-right-col">
+                                <div class="pc-rec-dashboard">
+                                    <div class="rec-status-info">
+                                        <div id="pc-rec-indicator" class="recording-indicator" style="position: static; padding: 0; background: transparent;">
+                                            <span class="rec-dot" style="width: 12px; height: 12px;"></span>
+                                            <span id="pc-rec-timer" style="font-size: 1.2rem; font-weight: 800; color: white;">00:00</span>
+                                        </div>
+                                        <label class="auto-rec-toggle">
+                                            <input type="checkbox" id="auto-rec-checkbox" checked>
+                                            🚀 Tự động ghi khi quét
+                                        </label>
+                                    </div>
+                                    <div class="rec-btn-group">
+                                        <button class="rec-btn btn-start-rec" onclick="startManualRec()">🔴 BẮT ĐẦU GHI</button>
+                                        <button class="rec-btn btn-stop-rec" onclick="stopManualRec()">⏹️ DỪNG GHI</button>
+                                    </div>
+                                </div>
+
+                                <div class="pc-monitoring-grid">
+                                    <div class="monitor-box">
+                                        <div class="monitor-label">GÓC 1: CẬN CẢNH (QUÉT)</div>
+                                        <video id="pc-video-1" autoplay muted playsinline></video>
+                                        <div id="monitor-cam-1" class="monitor-placeholder" style="display: flex;">📷 Camera 1</div>
+                                    </div>
+                                    <div class="monitor-box">
+                                        <div class="monitor-label">GÓC 2: TOÀN CẢNH</div>
+                                        <video id="pc-video-2" autoplay muted playsinline></video>
+                                        <div id="monitor-cam-2" class="monitor-placeholder" style="display: flex;">📷 Camera 2</div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -216,7 +260,7 @@
         </div>
 
         <footer class="footer">
-            <span class="copyright">Thực hiện bởi <i>NVH</i> — Version 1.9.1</span>
+            <span class="copyright">Thực hiện bởi <i>NVH</i> — Version 1.9.5</span>
         </footer>
     </div>
 
@@ -386,6 +430,14 @@
             <div class="changelog-container">
                 <div class="changelog-list">
                     <div class="changelog-item">
+                        <span class="ver-tag">v1.9.5</span>
+                        <ul>
+                            <li><b>PC Pro Mode:</b> Siêu giao diện 2 cột dành cho máy tính (Quét mã bên trái - Giám sát bên phải).</li>
+                            <li><b>Ghi hình:</b> Thêm trung tâm điều khiển Ghi hình thủ công và chế độ Tự động ghi khi quét mã.</li>
+                            <li><b>Hệ thống:</b> Tự động nhận diện thiết bị Máy tính/Tablet để kích hoạt giao diện chuyên nghiệp.</li>
+                        </ul>
+                    </div>
+                    <div class="changelog-item">
                         <span class="ver-tag">v1.9.1</span>
                         <ul>
                             <li><b>Bảo mật (Chuẩn hóa):</b> Bắt buộc nhập mật khẩu xác minh lần đầu tiên sau cập nhật. Hệ thống sẽ tự động ghi nhớ vĩnh viễn sau khi nhập đúng.</li>
@@ -530,7 +582,7 @@
                 <input type="password" id="passcode-input" inputmode="numeric" maxlength="6" placeholder="******">
             </div>
             <button class="modal-btn btn-overwrite" onclick="validatePasscode()" style="margin-top: 20px;">XÁC NHẬN</button>
-            <div class="passcode-version">TCT Scanner Pro — Version 1.9.1</div>
+            <div class="passcode-version">TCT Scanner Pro — Version 1.9.5</div>
             <p id="passcode-error" style="color: var(--danger); font-size: 0.75rem; margin-top: 10px; display: none;">Mã Pin không chính xác!</p>
         </div>
     </div>

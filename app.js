@@ -326,10 +326,13 @@ function processValidScan(decodedText, action = 'APPEND') {
 
     // v1.6.5: Lấy ID để ghi hình thủ công
     lastScannedId = orderData.orderId;
+    updatePCDisplay(orderData.orderId);
 
-    // v1.6.4: Tự động khởi động Ghi hình khi quét mã (Nếu ở chế độ PC)
-    if (pcMode && !recordingActive && autoRecordEnabled) {
-        startDualRecording(orderData.orderId);
+    // v1.9.5: Tự động khởi động Ghi hình khi quét mã (Nếu ở chế độ PC và bật Auto)
+    const isAutoRec = document.getElementById('auto-rec-checkbox')?.checked;
+    if (pcMode && isAutoRec) {
+        if (recordingActive) stopDualRecording();
+        setTimeout(() => startDualRecording(orderData.orderId), 300);
     }
 
     if (scanMode === 'single' && !pcMode) setTimeout(() => stopScanner(), 500);
@@ -1550,43 +1553,49 @@ async function stopScanner() {
     }
 }
 
-// --- LOGIC PC MODE v1.6.4 ---
-function togglePCMode() {
-    pcMode = !pcMode;
+// --- LOGIC PC PRO MODE v1.9.5 ---
+function togglePCMode(forceState = null) {
+    pcMode = forceState !== null ? forceState : !pcMode;
     localStorage.setItem('nvh_pc_mode', pcMode);
     
-    const pcUI = document.getElementById('pc-mode-ui');
-    const mobileUI = document.getElementById('mobile-mode-ui');
-    const pcStatus = document.getElementById('pc-status-badge');
+    const body = document.body;
+    const reader = document.getElementById('reader');
+    const pcReaderContainer = document.getElementById('pc-reader-container');
+    const mobileReaderContainer = document.querySelector('#mobile-scan-ui .scanner-container');
 
     if (pcMode) {
-        if (pcUI) pcUI.style.display = 'block';
-        if (mobileUI) mobileUI.style.display = 'none';
-        if (pcStatus) pcStatus.style.display = 'inline-block';
-        showToast("🖥️ Đã chuyển sang chế độ PC");
+        body.classList.add('pc-mode');
+        // Di chuyển reader vào cột trái PC
+        if (reader && pcReaderContainer) pcReaderContainer.appendChild(reader);
+        showToast("🖥️ Đã kích hoạt Giao diện PC Pro");
+        startDualMonitoring(); // Tự động bật camera giám sát nếu ở PC
     } else {
-        if (pcUI) pcUI.style.display = 'none';
-        if (mobileUI) mobileUI.style.display = 'block';
-        if (pcStatus) pcStatus.style.display = 'none';
-        showToast("📱 Đã chuyển sang chế độ Mobile");
+        body.classList.remove('pc-mode');
+        // Trả reader về giao diện mobile
+        if (reader && mobileReaderContainer) mobileReaderContainer.appendChild(reader);
+        showToast("📱 Đã chuyển sang giao diện Mobile");
+        stopScanner();
     }
 }
 
 function togglePCModeFromModal(checked) {
-    pcMode = checked;
-    localStorage.setItem('nvh_pc_mode', pcMode);
-    
-    // Tự động chuyển giao diện nếu đang ở Tab Quét
-    const pcUI = document.getElementById('pc-mode-ui');
-    const mobileUI = document.getElementById('mobile-mode-ui');
-    
-    if (pcMode) {
-        if (pcUI) pcUI.style.display = 'block';
-        if (mobileUI) mobileUI.style.display = 'none';
-    } else {
-        if (pcUI) pcUI.style.display = 'none';
-        if (mobileUI) mobileUI.style.display = 'block';
+    togglePCMode(checked);
+}
+
+// --- LOGIC RECORDING v1.9.5 BỔ SUNG ---
+function startManualRec() {
+    if (!isScanning) {
+        showToast("⚠️ Vui lòng BẬT QUÉT trước khi ghi hình!");
+        return;
     }
+    const orderId = lastScannedId || "HAND_REC_" + new Date().getTime();
+    startDualRecording(orderId);
+    document.querySelector('.pc-right-col').classList.add('rec-active-mode');
+}
+
+function stopManualRec() {
+    stopDualRecording();
+    document.querySelector('.pc-right-col').classList.remove('rec-active-mode');
 }
 
 // --- LOGIC RECORDING v1.6.4 ---
@@ -1620,7 +1629,6 @@ async function startDualRecording(orderId) {
                     const blob = new Blob(chunks, { type: 'video/webm' });
                     const fileName = `${orderId}_CAM${index + 1}.webm`;
                     
-                    // Lưu vào HDD nếu có quyền
                     if (hddFolderHandle) {
                         try {
                             const fileHandle = await hddFolderHandle.getFileHandle(fileName, { create: true });
@@ -1629,8 +1637,6 @@ async function startDualRecording(orderId) {
                             await writable.close();
                         } catch (e) { console.error("HDD Save error:", e); }
                     }
-                    
-                    // Lưu vào IndexedDB (Dự phòng)
                     saveVideoToIDB(fileName, blob);
                 };
                 
@@ -1640,11 +1646,7 @@ async function startDualRecording(orderId) {
         });
 
         recordingActive = true;
-        document.getElementById('pc-status-msg').innerText = "🔴 ĐANG GHI HÌNH: " + orderId;
-        document.getElementById('pc-status-msg').style.color = "var(--danger)";
-        
-        // Timer
-        recTimerInterval = setInterval(updateRecTimer, 1000);
+        recTimerInterval = setInterval(updateRecTimer, 1000); // Khởi động timer v1.9.5
     } catch (err) { console.error("Start Recording error:", err); }
 }
 
@@ -1671,6 +1673,15 @@ async function saveVideoToIDB(name, blob) {
     tx.objectStore("videos").put(blob, name);
 }
 
+function updatePCDisplay(id) {
+    lastScannedId = id;
+    const targets = ['pc-last-scanned', 'pc-pro-last-scanned'];
+    targets.forEach(tid => {
+        const el = document.getElementById(tid);
+        if (el) el.innerText = id;
+    });
+}
+
 async function getVideoFromIDB(name) {
     if (!db) return null;
     return new Promise((resolve) => {
@@ -1691,7 +1702,6 @@ window.onload = () => {
         localStorage.removeItem('nvh_verified');
         localStorage.removeItem('nvh_auth_skip');
         localStorage.setItem('nvh_v1.9.1_reset', 'done');
-        // Xóa tạm cờ session để bắt hiện modal
         window.isVerifiedSession = false;
     }
 
@@ -1701,29 +1711,18 @@ window.onload = () => {
         localStorage.setItem('nvh_vibrate', 'true');
     }
     
-    // Khôi phục PC Mode
+    // Khôi phục PC Mode - v1.9.5 Auto Detection
     let savedPCMode = localStorage.getItem('nvh_pc_mode');
     if (savedPCMode === null) {
-        pcMode = !isMobileDevice();
+        // Tự động bật PC mode nếu màn hình rộng (Tablet/Desktop)
+        pcMode = window.innerWidth > 1024;
         localStorage.setItem('nvh_pc_mode', pcMode);
     } else {
         pcMode = savedPCMode === 'true';
     }
 
-    // Áp dụng giao diện PC/Mobile ban đầu
-    const pcUI = document.getElementById('pc-mode-ui');
-    const mobileUI = document.getElementById('mobile-mode-ui');
-    const pcStatus = document.getElementById('pc-status-badge');
-    
-    if (pcMode) {
-        if (pcUI) pcUI.style.display = 'block';
-        if (mobileUI) mobileUI.style.display = 'none';
-        if (pcStatus) pcStatus.style.display = 'inline-block';
-    } else {
-        if (pcUI) pcUI.style.display = 'none';
-        if (mobileUI) mobileUI.style.display = 'block';
-        if (pcStatus) pcStatus.style.display = 'none';
-    }
+    // Áp dụng giao diện PC Pro Mode v1.9.5
+    togglePCMode(pcMode);
 
     checkSecurity();
     processSyncQueue();
