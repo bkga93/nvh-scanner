@@ -683,7 +683,8 @@ async function validatePasscode() {
         // 1. Kích hoạt cờ cứu nguy ngay lập tức v1.8.7
         window.isVerifiedSession = true;
         
-        // 2. Lưu cực nhanh vào localStorage v1.8.5
+        // 2. PHƯƠNG ÁN v1.9.0: Tự động ghi nhớ vĩnh viễn trên máy này
+        localStorage.setItem('nvh_auth_skip', 'true');
         localStorage.setItem('nvh_verified', 'true');
         
         // 3. Ẩn modal cưỡng bức v1.8.6
@@ -732,6 +733,7 @@ function openSettings(group) {
         'scan': 'THIẾT LẬP QUÉT',
         'storage': 'LƯU TRỮ & PC MODE',
         'camera': 'CẤU HÌNH CAMERA',
+        'security': 'CÀI ĐẶT BẢO MẬT',
         'changelog': 'NHẬT KÝ THAY ĐỔI'
     };
     title.innerText = titles[group] || 'CÀI ĐẶT';
@@ -1547,3 +1549,175 @@ async function stopScanner() {
         isScanning = false;
     }
 }
+
+// --- LOGIC PC MODE v1.6.4 ---
+function togglePCMode() {
+    pcMode = !pcMode;
+    localStorage.setItem('nvh_pc_mode', pcMode);
+    
+    const pcUI = document.getElementById('pc-mode-ui');
+    const mobileUI = document.getElementById('mobile-mode-ui');
+    const pcStatus = document.getElementById('pc-status-badge');
+
+    if (pcMode) {
+        if (pcUI) pcUI.style.display = 'block';
+        if (mobileUI) mobileUI.style.display = 'none';
+        if (pcStatus) pcStatus.style.display = 'inline-block';
+        showToast("🖥️ Đã chuyển sang chế độ PC");
+    } else {
+        if (pcUI) pcUI.style.display = 'none';
+        if (mobileUI) mobileUI.style.display = 'block';
+        if (pcStatus) pcStatus.style.display = 'none';
+        showToast("📱 Đã chuyển sang chế độ Mobile");
+    }
+}
+
+function togglePCModeFromModal(checked) {
+    pcMode = checked;
+    localStorage.setItem('nvh_pc_mode', pcMode);
+    
+    // Tự động chuyển giao diện nếu đang ở Tab Quét
+    const pcUI = document.getElementById('pc-mode-ui');
+    const mobileUI = document.getElementById('mobile-mode-ui');
+    
+    if (pcMode) {
+        if (pcUI) pcUI.style.display = 'block';
+        if (mobileUI) mobileUI.style.display = 'none';
+    } else {
+        if (pcUI) pcUI.style.display = 'none';
+        if (mobileUI) mobileUI.style.display = 'block';
+    }
+}
+
+// --- LOGIC RECORDING v1.6.4 ---
+async function initHDD() {
+    try {
+        hddFolderHandle = await window.showDirectoryPicker();
+        showToast("📂 Đã cấp quyền truy cập thư mục lưu trữ!");
+        const hStatus = document.getElementById('hdd-status-modal');
+        if (hStatus) {
+            hStatus.innerText = "Đã cấp quyền thư mục Local";
+            hStatus.style.color = "var(--success)";
+        }
+    } catch (err) {
+        showToast("❌ Lỗicấp quyền: " + err);
+    }
+}
+
+async function startDualRecording(orderId) {
+    if (recordingActive || !recorderStreams.length) return;
+
+    try {
+        mediaRecorders = [];
+        recStartTime = Date.now();
+        
+        recorderStreams.forEach((stream, index) => {
+            if (stream) {
+                const recorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp8' });
+                const chunks = [];
+                recorder.ondataavailable = (e) => chunks.push(e.data);
+                recorder.onstop = async () => {
+                    const blob = new Blob(chunks, { type: 'video/webm' });
+                    const fileName = `${orderId}_CAM${index + 1}.webm`;
+                    
+                    // Lưu vào HDD nếu có quyền
+                    if (hddFolderHandle) {
+                        try {
+                            const fileHandle = await hddFolderHandle.getFileHandle(fileName, { create: true });
+                            const writable = await fileHandle.createWritable();
+                            await writable.write(blob);
+                            await writable.close();
+                        } catch (e) { console.error("HDD Save error:", e); }
+                    }
+                    
+                    // Lưu vào IndexedDB (Dự phòng)
+                    saveVideoToIDB(fileName, blob);
+                };
+                
+                recorder.start();
+                mediaRecorders.push(recorder);
+            }
+        });
+
+        recordingActive = true;
+        document.getElementById('pc-status-msg').innerText = "🔴 ĐANG GHI HÌNH: " + orderId;
+        document.getElementById('pc-status-msg').style.color = "var(--danger)";
+        
+        // Timer
+        recTimerInterval = setInterval(updateRecTimer, 1000);
+    } catch (err) { console.error("Start Recording error:", err); }
+}
+
+function stopDualRecording() {
+    if (!recordingActive) return;
+    mediaRecorders.forEach(r => r.stop());
+    recordingActive = false;
+    clearInterval(recTimerInterval);
+    document.getElementById('pc-status-msg').innerText = "Sẵn sàng";
+    document.getElementById('pc-status-msg').style.color = "var(--primary-color)";
+    showToast("💾 Đã lưu video ghi hình!");
+}
+
+function updateRecTimer() {
+    const elapsed = Math.floor((Date.now() - recStartTime) / 1000);
+    const mins = Math.floor(elapsed / 60).toString().padStart(2, '0');
+    const secs = (elapsed % 60).toString().padStart(2, '0');
+    document.getElementById('pc-status-msg').innerText = `🔴 GHI HÌNH [${mins}:${secs}]: ${lastScannedId}`;
+}
+
+async function saveVideoToIDB(name, blob) {
+    if (!db) return;
+    const tx = db.transaction("videos", "readwrite");
+    tx.objectStore("videos").put(blob, name);
+}
+
+async function getVideoFromIDB(name) {
+    if (!db) return null;
+    return new Promise((resolve) => {
+        const tx = db.transaction("videos", "readonly");
+        const request = tx.objectStore("videos").get(name);
+        request.onsuccess = (e) => resolve(e.target.result);
+        request.onerror = () => resolve(null);
+    });
+}
+
+function isMobileDevice() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
+window.onload = () => {
+    // Khởi tạo mặc định
+    if (localStorage.getItem('nvh_sound_type') === null) {
+        localStorage.setItem('nvh_sound_type', 'standard');
+        localStorage.setItem('nvh_vibrate', 'true');
+    }
+    
+    // Khôi phục PC Mode
+    let savedPCMode = localStorage.getItem('nvh_pc_mode');
+    if (savedPCMode === null) {
+        pcMode = !isMobileDevice();
+        localStorage.setItem('nvh_pc_mode', pcMode);
+    } else {
+        pcMode = savedPCMode === 'true';
+    }
+
+    // Áp dụng giao diện PC/Mobile ban đầu
+    const pcUI = document.getElementById('pc-mode-ui');
+    const mobileUI = document.getElementById('mobile-mode-ui');
+    const pcStatus = document.getElementById('pc-status-badge');
+    
+    if (pcMode) {
+        if (pcUI) pcUI.style.display = 'block';
+        if (mobileUI) mobileUI.style.display = 'none';
+        if (pcStatus) pcStatus.style.display = 'inline-block';
+    } else {
+        if (pcUI) pcUI.style.display = 'none';
+        if (mobileUI) mobileUI.style.display = 'block';
+        if (pcStatus) pcStatus.style.display = 'none';
+    }
+
+    checkSecurity();
+    processSyncQueue();
+    fetchDataFromSheets(true); 
+    updateLastUpdateTimeDisplay(localStorage.getItem('nvh_last_update'));
+};

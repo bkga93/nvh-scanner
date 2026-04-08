@@ -216,7 +216,7 @@
         </div>
 
         <footer class="footer">
-            <span class="copyright">Thực hiện bởi <i>NVH</i> — Version 1.8.8</span>
+            <span class="copyright">Thực hiện bởi <i>NVH</i> — Version 1.9.0</span>
         </footer>
     </div>
 
@@ -250,6 +250,13 @@
                     <div class="text">
                         <span class="title">Cấu hình Camera</span>
                         <span class="desc">Chọn thiết bị quét & giám sát</span>
+                    </div>
+                </button>
+                <button class="menu-group-item" onclick="openSettings('security')">
+                    <span class="icon">🛡️</span>
+                    <div class="text">
+                        <span class="title">Cài đặt Bảo mật</span>
+                        <span class="desc">Quản lý quyền mật khẩu vĩnh viễn</span>
                     </div>
                 </button>
                 <button class="menu-group-item" onclick="openSettings('changelog')">
@@ -311,10 +318,17 @@
                     <span class="slider"></span>
                 </label>
             </div>
-            <div class="settings-group toggle-group" style="border-top: 1px dashed var(--border); padding-top: 15px; margin-top: 15px;">
-                <label style="color: var(--primary); font-weight: 600;">🛡️ Yêu cầu mật khẩu khi mở App</label>
+        </div>
+
+        <!-- Security Settings v1.9.0 -->
+        <div id="tmpl-security">
+            <div class="settings-info-box" style="margin-bottom: 20px;">
+                <p>Nếu tắt mục này, App sẽ yêu cầu mã PIN mỗi khi bạn mở trang để đảm bảo an toàn.</p>
+            </div>
+            <div class="settings-group toggle-group">
+                <label style="color: var(--primary); font-weight: 600;">🔒 Yêu cầu mật khẩu khi mở App</label>
                 <label class="toggle-switch">
-                    <input type="checkbox" id="auth-toggle-modal" onchange="saveModalSettings()" checked>
+                    <input type="checkbox" id="auth-toggle-modal" onchange="saveModalSettings()">
                     <span class="slider"></span>
                 </label>
             </div>
@@ -371,6 +385,20 @@
         <div id="tmpl-changelog">
             <div class="changelog-container">
                 <div class="changelog-list">
+                    <div class="changelog-item">
+                        <span class="ver-tag">v1.9.0</span>
+                        <ul>
+                            <li><b>Bảo mật:</b> Tự động ghi nhớ thiết bị vĩnh viễn sau khi nhập đúng mã PIN lần đầu.</li>
+                            <li><b>Giao diện:</b> Tách riêng mục "Cài đặt Bảo mật" 🛡️ để dễ dàng quản lý quyền truy cập.</li>
+                        </ul>
+                    </div>
+                    <div class="changelog-item">
+                        <span class="ver-tag">v1.8.9</span>
+                        <ul>
+                            <li><b>Hệ thống (Sửa lỗi):</b> Khôi phục toàn bộ mã nguồn điều khiển PC Mode và Recording bị lỗi trong lần cập nhật trước.</li>
+                            <li><b>Khởi tạo:</b> Tự động nhận diện thiết bị ổn định khi mở App.</li>
+                        </ul>
+                    </div>
                     <div class="changelog-item">
                         <span class="ver-tag">v1.8.8</span>
                         <ul>
@@ -496,7 +524,7 @@
                 <input type="password" id="passcode-input" inputmode="numeric" maxlength="6" placeholder="******">
             </div>
             <button class="modal-btn btn-overwrite" onclick="validatePasscode()" style="margin-top: 20px;">XÁC NHẬN</button>
-            <div class="passcode-version">TCT Scanner Pro — Version 1.8.8</div>
+            <div class="passcode-version">TCT Scanner Pro — Version 1.9.0</div>
             <p id="passcode-error" style="color: var(--danger); font-size: 0.75rem; margin-top: 10px; display: none;">Mã Pin không chính xác!</p>
         </div>
     </div>
