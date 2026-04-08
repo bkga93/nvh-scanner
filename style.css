@@ -325,10 +325,11 @@ body {
     color: var(--gray-text);
 }
 
-/* --- PC Mode Layout v1.6.4 --- */
+/* --- PC Mode Layout v1.6.5 --- */
 .app-container.pc-layout {
-    max-width: none;
-    width: 100vw;
+    max-width: none !important;
+    width: 100vw !important;
+    margin: 0 !important;
 }
 
 .app-main-layout {
@@ -358,8 +359,59 @@ body {
     color: var(--primary-color);
     font-weight: 900;
     font-size: 0.9rem;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     letter-spacing: 2px;
+}
+
+.monitor-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--accent-color);
+    padding: 12px 15px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    border: 1px solid rgba(255, 215, 0, 0.2);
+}
+
+.control-group {
+    display: flex;
+    gap: 10px;
+}
+
+.monitor-btn {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 8px 15px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.monitor-btn:hover:not(:disabled) {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.monitor-btn.btn-rec {
+    border-color: var(--danger);
+    color: var(--danger);
+}
+
+.monitor-btn.btn-rec:hover {
+    background-color: var(--danger);
+    color: white;
+}
+
+.auto-rec-label {
+    font-size: 0.75rem;
+    color: var(--gray-text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
 }
 
 .pc-rec {
@@ -376,7 +428,7 @@ body {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 20px;
-    height: 100%;
+    flex: 1;
 }
 
 .monitor-box {

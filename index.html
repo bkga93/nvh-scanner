@@ -13,7 +13,7 @@
     <script src="https://unpkg.com/html5-qrcode"></script>
 </head>
 <body>
-    <div class="app-container">
+    <div class="app-container" id="app-container">
         <!-- Tabs Navigation with Menu Integrated -->
         <nav class="tabs-nav">
             <button class="menu-btn-inline" onclick="toggleDrawer(true)">☰</button>
@@ -135,10 +135,27 @@
             </main>
 
             <!-- PC Monitor Panel (Right side in PC mode) -->
-            <aside id="pc-monitor" class="monitor-panel" style="display: none;">
                 <div class="monitor-header">
                     <span>HỆ THỐNG GIÁM SÁT 2 GÓC MÁY</span>
                     <div id="pc-rec-indicator" class="pc-rec" style="display: none;">🔴 ĐANG GHI HÌNH</div>
+                </div>
+
+                <!-- Monitor Controls v1.6.5 -->
+                <div class="monitor-controls">
+                    <div class="control-group">
+                        <button id="manual-rec-btn" class="monitor-btn btn-rec" onclick="manualStartRecording()">
+                            🔴 GHI HÌNH THỦ CÔNG
+                        </button>
+                        <button id="manual-stop-btn" class="monitor-btn" onclick="stopDualRecording()" disabled style="opacity: 0.5;">
+                            ⏹️ DỪNG GHI
+                        </button>
+                    </div>
+                    <div class="control-group-right">
+                        <label class="auto-rec-label">
+                            <input type="checkbox" id="auto-record-toggle" onchange="toggleAutoRecord()" checked>
+                            Tự động ghi khi quét mã
+                        </label>
+                    </div>
                 </div>
                 <div class="monitor-grid">
                     <div class="monitor-box">
@@ -153,9 +170,8 @@
             </aside>
         </div>
 
-        <!-- Copyright & Version -->
         <footer class="footer">
-            <span class="copyright">Thực hiện bởi <i>NVH</i> — Version 1.5</span>
+            <span class="copyright">Thực hiện bởi <i>NVH</i> — Version 1.6.5</span>
         </footer>
     </div>
 
@@ -223,6 +239,14 @@
             <div class="changelog-container">
                 <label>NHẬT KÝ THAY ĐỔI</label>
                 <div class="changelog-list">
+                    <div class="changelog-item">
+                        <span class="ver-tag">v1.6.5</span>
+                        <ul>
+                            <li>Bổ sung điều khiển ghi hình thủ công trên màn hình Monitor.</li>
+                            <li>Tự động chặn PC Mode trên thiết bị di động.</li>
+                            <li>Sửa lỗi bố cục Monitor và đồng bộ Version.</li>
+                        </ul>
+                    </div>
                     <div class="changelog-item">
                         <span class="ver-tag">v1.6.4</span>
                         <ul>

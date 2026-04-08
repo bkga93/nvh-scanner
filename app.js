@@ -23,6 +23,8 @@ let recStartTime = null;
 let recTimerInterval = null;
 let hddFolderHandle = null; // Quyền truy cập thư mục máy tính
 let uploadQueue = []; // Hàng đợi tải video lên Drive
+let lastScannedId = null; // Lưu ID cuối cùng để ghi hình thủ công
+let autoRecordEnabled = localStorage.getItem('nvh_auto_record') !== 'false';
 
 // Cấu hình âm thanh & rung
 let audioCtx;
@@ -258,8 +260,11 @@ function processValidScan(decodedText, action = 'APPEND') {
     isProcessing = false;
     processSyncQueue();
 
+    // v1.6.5: Lấy ID để ghi hình thủ công
+    lastScannedId = orderData.orderId;
+
     // v1.6.4: Tự động khởi động Ghi hình khi quét mã (Nếu ở chế độ PC)
-    if (pcMode && !recordingActive) {
+    if (pcMode && !recordingActive && autoRecordEnabled) {
         startDualRecording(orderData.orderId);
     }
 
@@ -589,12 +594,13 @@ window.onload = () => {
     
     // Khôi phục PC Mode nếu trước đó đã bật
     const savedPCMode = localStorage.getItem('nvh_pc_mode') === 'true';
-    if (savedPCMode) {
+    if (savedPCMode && !isMobileDevice()) {
         document.getElementById('pc-mode-toggle').checked = true;
         togglePCMode();
     }
 
     document.getElementById('drive-folder-id').value = localStorage.getItem('nvh_drive_folder_id') || "";
+    document.getElementById('auto-record-toggle').checked = autoRecordEnabled;
 
     checkSecurity(); 
     loadLocalHistory();
@@ -605,10 +611,22 @@ window.onload = () => {
     setInterval(updateUploadIndicator, 3000); // Cập nhật trạng thái upload
 };
 
-// --- LOGIC PC MODE & RECORDING (NEW v1.6.4) ---
+// --- LOGIC PC MODE & RECORDING (NEW v1.6.5) ---
+
+function isMobileDevice() {
+    return (window.innerWidth <= 800) || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
 
 function togglePCMode() {
-    pcMode = document.getElementById('pc-mode-toggle').checked;
+    const toggle = document.getElementById('pc-mode-toggle');
+    
+    if (toggle.checked && isMobileDevice()) {
+        showToast("⚠️ Chế độ PC không hỗ trợ trên điện thoại.");
+        toggle.checked = false;
+        return;
+    }
+
+    pcMode = toggle.checked;
     localStorage.setItem('nvh_pc_mode', pcMode);
     
     const container = document.getElementById('app-container');
@@ -619,13 +637,30 @@ function togglePCMode() {
         container.classList.add('pc-layout');
         monitor.style.display = 'flex';
         cam2Group.style.display = 'block';
-        updateCameraList(); // Refresh list to include Camera 2
+        updateCameraList(); 
     } else {
         container.classList.remove('pc-layout');
         monitor.style.display = 'none';
         cam2Group.style.display = 'none';
         if (isScanning) stopScanner();
     }
+}
+
+function toggleAutoRecord() {
+    autoRecordEnabled = document.getElementById('auto-record-toggle').checked;
+    localStorage.setItem('nvh_auto_record', autoRecordEnabled);
+    showToast(autoRecordEnabled ? "✔️ Đã bật Tự động ghi khi quét" : "⏹️ Đã tắt Tự động ghi khi quét");
+}
+
+function manualStartRecording() {
+    if (recordingActive) return;
+    
+    if (!lastScannedId) {
+        showToast("⚠️ Vui lòng quét mã đơn hàng trước khi ghi hình!");
+        return;
+    }
+    
+    startDualRecording(lastScannedId);
 }
 
 async function requestHDDPermission() {
@@ -677,6 +712,16 @@ function startDualRecording(orderId) {
     document.getElementById('pc-rec-indicator').style.display = 'block';
     startRecTimer();
     showToast("🔴 ĐANG GHI HÌNH ĐƠN: " + orderId);
+    
+    // UI Update v1.6.5
+    const startBtn = document.getElementById('manual-rec-btn');
+    const stopBtn = document.getElementById('manual-stop-btn');
+    if (startBtn) {
+        startBtn.disabled = true;
+        startBtn.style.opacity = "0.5";
+        stopBtn.disabled = false;
+        stopBtn.style.opacity = "1";
+    }
 }
 
 function startRecTimer() {
@@ -705,6 +750,16 @@ function stopDualRecording() {
     document.getElementById('recording-status').style.display = 'none';
     document.getElementById('pc-rec-indicator').style.display = 'none';
     showToast("💾 Đang xử lý lưu Video...");
+
+    // UI Update v1.6.5
+    const startBtn = document.getElementById('manual-rec-btn');
+    const stopBtn = document.getElementById('manual-stop-btn');
+    if (startBtn) {
+        startBtn.disabled = false;
+        startBtn.style.opacity = "1";
+        stopBtn.disabled = true;
+        stopBtn.style.opacity = "0.5";
+    }
 }
 
 async function finalizeRecording(orderId, camIndex, chunks) {
