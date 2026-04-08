@@ -14,6 +14,12 @@
 </head>
 <body>
     <div class="app-container">
+        <!-- App Header -->
+        <header class="app-header">
+            <h1 class="app-title">NVH SCANNER</h1>
+            <button class="settings-entry-btn" onclick="toggleSettingsModal(true)">⚙️</button>
+        </header>
+
         <!-- Flash Overlay (Success effect) -->
         <div id="flash-overlay" class="flash-overlay"></div>
 
@@ -28,7 +34,7 @@
         <main class="tab-content">
             <!-- Scan View -->
             <section id="scan-view" class="view active">
-                <!-- Mode & Settings Header -->
+                <!-- Mode Selector -->
                 <div class="mode-selector-container">
                     <div class="mode-switch">
                         <input type="radio" name="scanMode" id="modeSingle" value="single" checked>
@@ -36,7 +42,6 @@
                         <input type="radio" name="scanMode" id="modeContinuous" value="continuous">
                         <label for="modeContinuous">Quét liên tục</label>
                     </div>
-                    <button class="settings-entry-btn" onclick="toggleSettingsModal(true)">⚙️</button>
                 </div>
 
                 <!-- Main Scanner UI -->
@@ -132,10 +137,9 @@
             </section>
         </main>
 
-        <!-- Copyright -->
+        <!-- Copyright & Version -->
         <footer class="footer">
-            <span class="copyright">Thực hiện bởi <i>NVH</i></span>
-            <div class="app-version">Version 1.1</div>
+            <span class="copyright">Thực hiện bởi <i>NVH</i> — Version 1.2</span>
         </footer>
     </div>
 
@@ -159,6 +163,30 @@
                 <div class="toggle-switch">
                     <input type="checkbox" id="vibrate-toggle" checked>
                     <span class="slider"></span>
+                </div>
+            </div>
+
+            <!-- Changelog Section -->
+            <div class="settings-divider"></div>
+            <div class="changelog-container">
+                <label>NHẬT KÝ THAY ĐỔI</label>
+                <div class="changelog-list">
+                    <div class="changelog-item">
+                        <span class="ver-tag">v1.2</span>
+                        <ul>
+                            <li>Di chuyển nút Cài đặt lên đầu App cho dễ bấm.</li>
+                            <li>Gộp thông tin phiên bản vào cùng hàng ở chân trang.</li>
+                            <li>Thêm mục Nhật ký thay đổi ngay trong Cài đặt.</li>
+                        </ul>
+                    </div>
+                    <div class="changelog-item" style="opacity:0.6">
+                        <span class="ver-tag">v1.1</span>
+                        <ul>
+                            <li>Thêm 4 kiểu chuông thông báo to và rõ hơn.</li>
+                            <li>Thêm tính năng rung khi bắt mã thành công.</li>
+                            <li>Khôi phục hoàn toàn khung quét mã vuông 1:1.</li>
+                        </ul>
+                    </div>
                 </div>
             </div>
 
