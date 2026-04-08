@@ -21,7 +21,17 @@ let recordingActive = false;
 let recorderStreams = []; // [stream1, stream2]
 let recStartTime = null;
 let recTimerInterval = null;
-let hddFolderHandle = null; // Quyền truy cập thư mục máy tính
+let hddFolderHandle = null;
+let db;
+
+// --- INITIALIZE INDEXED_DB v1.7.0 ---
+const dbRequest = indexedDB.open("NVHScannerDB", 1);
+dbRequest.onupgradeneeded = (e) => {
+    const db = e.target.result;
+    if (!db.objectStoreNames.contains("videos")) db.createObjectStore("videos");
+};
+dbRequest.onsuccess = (e) => { db = e.target.result; };
+ // Quyền truy cập thư mục máy tính
 let uploadQueue = []; // Hàng đợi tải video lên Drive
 let lastScannedId = null; // Lưu ID cuối cùng để ghi hình thủ công
 let autoRecordEnabled = localStorage.getItem('nvh_auto_record') !== 'false';
@@ -791,6 +801,10 @@ async function finalizeRecording(orderId, camIndex, chunks) {
             await writable.write(blob);
             await writable.close();
         } catch (err) { console.error("HDD Save error:", err); }
+    } else if (db) {
+        // Lưu vào IndexedDB (Mobile)
+        const trans = db.transaction(["videos"], "readwrite");
+        trans.objectStore("videos").put(blob, fileName);
     } else {
         // Tự động tải về nếu không có quyền Directory
         const url = URL.createObjectURL(blob);
@@ -945,17 +959,23 @@ async function checkVideoStatus(orderId) {
     const downloadContainer = document.getElementById('download-container');
 
     statusCloud.className = 'status-badge';
-    statusCloud.innerText = '☁️ Kiểm tra Cloud...';
+    statusCloud.innerText = '☁️ Cloud';
     statusLocal.className = 'status-badge';
-    statusLocal.innerText = '📂 Kiểm tra Máy...';
+    statusLocal.innerText = '📂 Máy';
 
-    // 1. Kiểm tra Local
+    // 1. Kiểm tra Local (HDD hoặc IDB)
     let isLocal = false;
     if (hddFolderHandle) {
         try {
             await hddFolderHandle.getFileHandle(`${orderId}_CAM1.webm`);
             isLocal = true;
         } catch (e) { isLocal = false; }
+    }
+    
+    // Nếu HDD không có, check trong IndexedDB (Mobile v1.7.0)
+    if (!isLocal && db) {
+        const video = await getVideoFromIDB(`${orderId}_CAM1.webm`);
+        if (video) isLocal = true;
     }
 
     if (isLocal) {
@@ -990,8 +1010,30 @@ async function checkVideoStatus(orderId) {
             if (!isLocal) downloadContainer.style.display = 'none';
         }
     } catch (err) {
-        statusCloud.innerText = '☁️ Phải cài App Script mới kiểm tra được Cloud';
+        statusCloud.innerText = '☁️ Lỗi Cloud';
     }
+}
+
+async function getVideoFromIDB(name) {
+    return new Promise((resolve) => {
+        if (!db) return resolve(null);
+        const trans = db.transaction(["videos"], "readonly");
+        const store = trans.objectStore("videos");
+        const req = store.get(name);
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => resolve(null);
+    });
+}
+
+async function clearLocalVideoCache() {
+    if (!confirm("⚠️ Bạn có chắc muốn xóa toàn bộ bộ nhớ Video trên iPhone/Trình duyệt này?")) return;
+    const trans = db.transaction(["videos"], "readwrite");
+    const store = trans.objectStore("videos");
+    const req = store.clear();
+    req.onsuccess = () => {
+        showToast("✔️ Đã xóa sạch bộ nhớ Video.");
+        if (selectedReviewItem) checkVideoStatus(selectedReviewItem.orderId);
+    };
 }
 
 async function downloadVideoFromCloud() {
@@ -1000,11 +1042,6 @@ async function downloadVideoFromCloud() {
     const btnText = document.getElementById('download-text');
     const progressFill = document.getElementById('download-progress');
     const btnDownload = document.getElementById('btn-download');
-
-    if (!hddFolderHandle) {
-        showToast("⚠️ Vui lòng CẤP QUYỀN LƯU Ổ CỨNG trước!");
-        return;
-    }
 
     btnDownload.disabled = true;
     btnDownload.style.opacity = "0.7";
@@ -1023,32 +1060,32 @@ async function downloadVideoFromCloud() {
             });
 
             if (!response.ok) continue;
-            
             const result = await response.json();
             if (!result.base64) continue;
             
-            // Chuyển base64 sang blob
+            // Chuyển sang blob
             const byteCharacters = atob(result.base64);
             const byteNumbers = new Array(byteCharacters.length);
-            for (let j = 0; j < byteCharacters.length; j++) {
-                byteNumbers[j] = byteCharacters.charCodeAt(j);
-            }
+            for (let j = 0; j < byteCharacters.length; j++) byteNumbers[j] = byteCharacters.charCodeAt(j);
             const blob = new Blob([new Uint8Array(byteNumbers)], { type: 'video/webm' });
 
-            // Lưu vào HDD
-            const fileHandle = await hddFolderHandle.getFileHandle(fileName, { create: true });
-            const writable = await fileHandle.createWritable();
-            await writable.write(blob);
-            await writable.close();
+            // Lưu vào HDD nếu có, hoặc IDB nếu không (Mobile)
+            if (hddFolderHandle) {
+                const fileHandle = await hddFolderHandle.getFileHandle(fileName, { create: true });
+                const writable = await fileHandle.createWritable();
+                await writable.write(blob);
+                await writable.close();
+            } else if (db) {
+                const trans = db.transaction(["videos"], "readwrite");
+                trans.objectStore("videos").put(blob, fileName);
+            }
             
-            // Cập nhật progress
             progressFill.style.width = ((i + 1) / cams.length * 100) + "%";
         }
 
         showToast("✔️ Tải video thành công!");
         checkVideoStatus(orderId);
     } catch (err) {
-        console.error(err);
         showToast("❌ Lỗi khi tải video!");
         btnDownload.disabled = false;
         btnDownload.style.opacity = "1";
@@ -1107,9 +1144,41 @@ async function promptLocalFiles(targetOrderId = null) {
     input.click();
 }
 
-function syncPlayPause() {
+async function syncPlayPause() {
     const v1 = document.getElementById('video-review-1');
     const v2 = document.getElementById('video-review-2');
+    
+    if (!v1.src || !v2.src) {
+        // Nếu chưa có nguồn, thử load từ HDD hoặc IDB (Mobile)
+        if (selectedReviewItem) {
+            const orderId = selectedReviewItem.orderId;
+            let blob1, blob2;
+
+            if (hddFolderHandle) {
+                try {
+                    const h1 = await hddFolderHandle.getFileHandle(`${orderId}_CAM1.webm`);
+                    const h2 = await hddFolderHandle.getFileHandle(`${orderId}_CAM2.webm`);
+                    blob1 = await h1.getFile();
+                    blob2 = await h2.getFile();
+                } catch(e) {}
+            }
+            
+            if (!blob1 && db) {
+                blob1 = await getVideoFromIDB(`${orderId}_CAM1.webm`);
+                blob2 = await getVideoFromIDB(`${orderId}_CAM2.webm`);
+            }
+
+            if (blob1) {
+                v1.src = URL.createObjectURL(blob1);
+                v2.src = URL.createObjectURL(blob2);
+            } else {
+                showToast("⚠️ Không tìm thấy video trên máy!");
+                return;
+            }
+        } else {
+            return;
+        }
+    }
     
     if (v1.paused) {
         v1.play();

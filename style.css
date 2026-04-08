@@ -687,9 +687,9 @@ body {
 /* --- UI ENHANCEMENTS v1.6.8 --- */
 .highlight-time {
     color: var(--warning);
-    font-size: 1rem;
+    font-size: 1.3rem;
     font-weight: 900;
-    text-shadow: 0 0 10px rgba(255, 187, 51, 0.3);
+    text-shadow: 0 0 10px rgba(255, 187, 51, 0.4);
 }
 
 .id-copy-group {

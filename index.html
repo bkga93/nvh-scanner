@@ -102,7 +102,7 @@
                     <div id="remote-data-list" class="history-list"></div>
                     <div id="item-detail-panel" class="detail-panel" style="display: none;">
                         <h4 class="detail-title">THÔNG TIN CHI TIẾT</h4>
-                        <div class="detail-row highlight-row"><span>Ngày quét:</span> <span id="detail-time" class="highlight-time">...</span></div>
+                        <div class="detail-row highlight-row"><span>Thời gian quét:</span> <span id="detail-time" class="highlight-time">...</span></div>
                         <div class="detail-row">
                             <span>Mã đơn hàng:</span> 
                             <div class="id-copy-group">
@@ -128,7 +128,7 @@
                     </div>
                     
                     <div id="review-detail-panel" class="detail-panel" style="display: none; margin-bottom: 20px;">
-                        <div class="detail-row highlight-row"><span>Thời gian:</span> <span id="review-detail-time" class="highlight-time">...</span></div>
+                        <div class="detail-row highlight-row"><span>Thời gian quét:</span> <span id="review-detail-time" class="highlight-time">...</span></div>
                         <div class="detail-row"><span>Mã đơn hàng:</span> <strong id="review-detail-content" style="color: var(--primary-color);">...</strong></div>
                         <div class="detail-row">
                             <span>Trạng thái:</span>
@@ -137,7 +137,6 @@
                                 <span id="status-local" class="status-badge">📂 Máy</span>
                             </div>
                         </div>
-                        <div class="detail-row" style="opacity: 0.6; font-size: 0.75rem;"><span>ID hệ thống:</span> <span id="review-detail-id">...</span></div>
                     </div>
 
                     <div class="review-bottom-panel">
@@ -206,7 +205,7 @@
         </div>
 
         <footer class="footer">
-            <span class="copyright">Thực hiện bởi <i>NVH</i> — Version 1.6.9</span>
+            <span class="copyright">Thực hiện bởi <i>NVH</i> — Version 1.7.0</span>
         </footer>
     </div>
 
@@ -267,7 +266,9 @@
             <div class="settings-group">
                 <label>Vị trí lưu Video (Ổ cứng)</label>
                 <button class="modal-btn btn-append" onclick="requestHDDPermission()" style="width: 100%;">CẤP QUYỀN THƯ MỤC</button>
-                <div id="hdd-status" class="settings-hint">Chưa chọn thư mục lưu trữ</div>
+                <div id="hdd-status" class="settings-hint">Chưa chọn thư mục (Chỉ PC Chrome/Edge)</div>
+                <button class="modal-btn btn-append" onclick="clearLocalVideoCache()" style="width: 100%; background: var(--danger); margin-top: 10px;">XOÁ BỘ NHỚ VIDEO</button>
+                <div class="settings-hint">Giải phóng dung lượng iPhone/Mobile</div>
             </div>
 
             <!-- Changelog Section -->
@@ -275,6 +276,15 @@
             <div class="changelog-container">
                 <label>NHẬT KÝ THAY ĐỔI</label>
                 <div class="changelog-list">
+                    <div class="changelog-item">
+                        <span class="ver-tag">v1.7.0</span>
+                        <ul>
+                            <li>Giải pháp iPhone: Lưu video vào bộ nhớ đệm app (IndexedDB) để tự động hóa hoàn toàn.</li>
+                            <li>Đổi tên nhãn "Thời gian quét" và phóng to kích thước hiển thị.</li>
+                            <li>Tinh gọn Tab Xem lại: Bỏ ID hệ thống.</li>
+                            <li>Thêm tính năng Xoá bộ nhớ video để giải phóng dung lượng.</li>
+                        </ul>
+                    </div>
                     <div class="changelog-item">
                         <span class="ver-tag">v1.6.9</span>
                         <ul>
