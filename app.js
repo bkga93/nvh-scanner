@@ -76,11 +76,12 @@ async function toggleScanner() {
                 { 
                     fps: 25, 
                     qrbox: (w, h) => {
-                        // Tính toán hình vuông 1:1 dựa trên cạnh ngắn nhất
-                        const size = Math.min(w, h) * 0.9;
+                        // Trình quét sẽ nhận diện trong toàn bộ khung vuông 1:1
+                        const size = Math.min(w, h);
                         return { width: size, height: size };
                     },
-                    // Không ép tỷ lệ camera để tránh bị méo hình trên 1 số thiết bị
+                    // Tắt vùng mờ tự động của thư viện để dùng khung thủ công của chúng ta
+                    showViewFinder: false 
                 },
                 onScanSuccess
             );
