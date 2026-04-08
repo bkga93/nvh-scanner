@@ -14,20 +14,15 @@
 </head>
 <body>
     <div class="app-container">
-        <!-- App Header -->
-        <header class="app-header">
-            <button class="menu-btn" onclick="toggleDrawer(true)">☰</button>
-        </header>
-
-        <!-- Flash Overlay (Success effect) -->
-        <div id="flash-overlay" class="flash-overlay"></div>
-
-        <!-- Tabs Navigation -->
+        <!-- Tabs Navigation with Menu Integrated -->
         <nav class="tabs-nav">
+            <button class="menu-btn-inline" onclick="toggleDrawer(true)">☰</button>
             <button class="tab-btn active" id="btn-tab-scan" onclick="switchTab('scan')">QUÉT MÃ</button>
             <button class="tab-btn" id="btn-tab-history" onclick="switchTab('history')">LỊCH SỬ</button>
             <button class="tab-btn" id="btn-tab-data" onclick="switchTab('data')">DỮ LIỆU</button>
         </nav>
+
+        <!-- Flash Overlay (Success effect) -->
 
         <!-- Main Content -->
         <main class="tab-content">
@@ -138,7 +133,7 @@
 
         <!-- Copyright & Version -->
         <footer class="footer">
-            <span class="copyright">Thực hiện bởi <i>NVH</i> — Version 1.4</span>
+            <span class="copyright">Thực hiện bởi <i>NVH</i> — Version 1.4.2</span>
         </footer>
     </div>
 
@@ -178,18 +173,18 @@
                 <label>NHẬT KÝ THAY ĐỔI</label>
                 <div class="changelog-list">
                     <div class="changelog-item">
-                        <span class="ver-tag">v1.4</span>
+                        <span class="ver-tag">v1.4.2</span>
                         <ul>
-                            <li>Loại bỏ tiêu đề TAYCAMTOT để tối ưu diện tích.</li>
-                            <li>Đẩy nút Menu lên vị trí cao nhất (dưới status bar).</li>
-                            <li>Tăng diện tích vùng làm việc chính.</li>
+                            <li>Gộp nút Menu vào cùng hàng với các Tab điều hướng.</li>
+                            <li>Tối ưu hóa vị trí sát mép Dynamic Island cho iPhone.</li>
+                            <li>Loại bỏ hoàn toàn các thanh Header thừa.</li>
                         </ul>
                     </div>
                     <div class="changelog-item" style="opacity:0.8">
-                        <span class="ver-tag">v1.3</span>
+                        <span class="ver-tag">v1.4</span>
                         <ul>
-                            <li>Đổi tên hệ thống thành TAYCAMTOT.</li>
-                            <li>Nâng cấp Menu trượt (Sidebar) từ bên trái.</li>
+                            <li>Loại bỏ tiêu đề TAYCAMTOT để tối ưu diện tích.</li>
+                            <li>Thử nghiệm đưa Menu lên vị trí cao nhất.</li>
                         </ul>
                     </div>
                     <div class="changelog-item" style="opacity:0.6">

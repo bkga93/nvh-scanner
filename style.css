@@ -56,8 +56,8 @@ body {
 .tabs-nav {
     display: flex;
     background-color: var(--surface-color);
-    padding-top: 50px; /* Chừa chỗ cho Menu trôi phía trên */
-    border-bottom: 1px solid rgba(255, 215, 0, 0.1);
+    padding-top: 35px; /* Sát dưới Dynamic Island */
+    border-bottom: 2px solid rgba(255, 215, 0, 0.1);
 }
 
 .tab-btn {
@@ -94,31 +94,17 @@ body {
     flex-direction: column;
 }
 
-/* App Header Context */
-.app-header {
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    padding: 30px 10px 0 10px; /* Sát trên cùng của status bar */
-    background-color: transparent;
-    z-index: 100;
-    position: absolute;
-    top: 0;
-    left: 0;
-}
-
-.menu-btn {
+.menu-btn-inline {
     background: none;
     border: none;
     color: var(--primary-color);
-    font-size: 2rem;
+    font-size: 1.6rem;
     cursor: pointer;
-    width: 46px;
-    height: 46px;
+    width: 60px;
     display: flex;
     align-items: center;
     justify-content: center;
-    line-height: 1;
+    border-right: 1px solid rgba(255, 215, 0, 0.1);
 }
 
 .app-title {
