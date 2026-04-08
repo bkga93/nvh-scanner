@@ -427,7 +427,7 @@ function filterRemoteData(immediate = false) {
     if (!input) return;
     const query = input.value.trim().toLowerCase();
     
-    // Luôn lọc local trước để phản hồi nhanh
+    // Ưu tiên lọc từ cache máy trước để phản hồi TỨC THÌ (v1.8.8)
     const filtered = remoteDataCache.filter(item => 
         (item.content && item.content.toLowerCase().includes(query)) || 
         (item.orderId && item.orderId.toLowerCase().includes(query))
@@ -459,15 +459,11 @@ async function searchRemoteSheets(query) {
         });
         const data = await response.json();
         
-        // Cập nhật bộ nhớ đệm
+        // Cập nhật bộ nhớ đệm (Không lọc trùng lặp theo yêu cầu v1.8.8)
         if (data && data.length > 0) {
-            data.forEach(newItem => {
-                const idx = remoteDataCache.findIndex(old => old.orderId === newItem.orderId || (old.content === newItem.content && old.content !== ''));
-                if (idx === -1) remoteDataCache.unshift(newItem);
-                else remoteDataCache[idx] = newItem; 
-            });
-            // Lưu cache lại
-            localStorage.setItem('nvh_remote_cache', JSON.stringify(remoteDataCache.slice(0, 1000)));
+            // Chỉ thêm các bản ghi mới vào đầu cache mà KHÔNG dùng findIndex lọc trùng
+            remoteDataCache = [...data, ...remoteDataCache].slice(0, 1000);
+            localStorage.setItem('nvh_remote_cache', JSON.stringify(remoteDataCache));
         }
         
         // Hiển thị kết quả mới nhất cho query hiện tại
@@ -625,7 +621,16 @@ function showToast(msg) {
 
 // --- LOGIC BẢO MẬT MÃ PIN ---
 function checkSecurity() {
-    // 0. Ưu tiên tuyệt đối cờ Session để tránh Loop v1.8.7
+    // 0. Kiểm tra quyền chủ động Tắt mật khẩu v1.8.8
+    if (localStorage.getItem('nvh_auth_skip') === 'true') {
+        const modal = document.getElementById('passcode-modal');
+        if (modal) modal.style.display = 'none';
+        document.body.classList.add('auth-success');
+        window.isVerifiedSession = true;
+        return;
+    }
+
+    // 0.1 Ưu tiên tuyệt đối cờ Session để tránh Loop v1.8.7
     if (window.isVerifiedSession === true) {
         const modal = document.getElementById('passcode-modal');
         if (modal) modal.style.display = 'none';
@@ -737,6 +742,10 @@ function openSettings(group) {
         const vibrateToggle = document.getElementById('vibrate-toggle-modal');
         if (soundSelect) soundSelect.value = localStorage.getItem('nvh_sound_type') || 'standard';
         if (vibrateToggle) vibrateToggle.checked = localStorage.getItem('nvh_vibrate') !== 'false';
+        
+        // Cập nhật Toggle bảo mật v1.8.8
+        const authToggle = document.getElementById('auth-toggle-modal');
+        if (authToggle) authToggle.checked = localStorage.getItem('nvh_auth_skip') !== 'true';
     } else if (group === 'storage') {
         const pcToggle = document.getElementById('pc-mode-toggle-modal');
         const driveInput = document.getElementById('drive-folder-id-modal');
@@ -774,6 +783,10 @@ function saveModalSettings() {
     if (scannerCam) localStorage.setItem('nvh_scanner_cam_id', scannerCam);
     if (m1Cam) localStorage.setItem('nvh_monitor1_cam_id', m1Cam);
     if (m2Cam) localStorage.setItem('nvh_monitor2_cam_id', m2Cam);
+    
+    // Lưu cài đặt bảo mật v1.8.8 (Đảo ngược auth_skip vì UI là auth_required)
+    const authReq = document.getElementById('auth-toggle-modal')?.checked;
+    if (authReq !== undefined) localStorage.setItem('nvh_auth_skip', !authReq);
     
     // Đồng bộ ngược lại cho cũ
     if (scannerCam) localStorage.setItem('nvh_camera_id', scannerCam);

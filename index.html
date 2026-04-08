@@ -216,7 +216,7 @@
         </div>
 
         <footer class="footer">
-            <span class="copyright">Thực hiện bởi <i>NVH</i> — Version 1.8.7</span>
+            <span class="copyright">Thực hiện bởi <i>NVH</i> — Version 1.8.8</span>
         </footer>
     </div>
 
@@ -311,6 +311,13 @@
                     <span class="slider"></span>
                 </label>
             </div>
+            <div class="settings-group toggle-group" style="border-top: 1px dashed var(--border); padding-top: 15px; margin-top: 15px;">
+                <label style="color: var(--primary); font-weight: 600;">🛡️ Yêu cầu mật khẩu khi mở App</label>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="auth-toggle-modal" onchange="saveModalSettings()" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
         </div>
 
         <!-- Storage Settings -->
@@ -364,6 +371,13 @@
         <div id="tmpl-changelog">
             <div class="changelog-container">
                 <div class="changelog-list">
+                    <div class="changelog-item">
+                        <span class="ver-tag">v1.8.8</span>
+                        <ul>
+                            <li><b>Bảo mật:</b> Thêm tính năng "Yêu cầu mật khẩu khi mở App" trong Cài đặt. Người dùng có thể chủ động Tắt xác thực.</li>
+                            <li><b>Tab Dữ liệu:</b> Tối ưu hóa tốc độ tìm kiếm (lọc cache tức thì). Hiển thị đầy đủ mọi bản ghi khớp, không còn lọc bỏ dữ liệu trùng lặp.</li>
+                        </ul>
+                    </div>
                     <div class="changelog-item">
                         <span class="ver-tag">v1.8.7</span>
                         <ul>
@@ -482,7 +496,7 @@
                 <input type="password" id="passcode-input" inputmode="numeric" maxlength="6" placeholder="******">
             </div>
             <button class="modal-btn btn-overwrite" onclick="validatePasscode()" style="margin-top: 20px;">XÁC NHẬN</button>
-            <div class="passcode-version">TCT Scanner Pro — Version 1.8.7</div>
+            <div class="passcode-version">TCT Scanner Pro — Version 1.8.8</div>
             <p id="passcode-error" style="color: var(--danger); font-size: 0.75rem; margin-top: 10px; display: none;">Mã Pin không chính xác!</p>
         </div>
     </div>
