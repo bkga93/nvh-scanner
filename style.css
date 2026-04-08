@@ -56,7 +56,7 @@ body {
 .tabs-nav {
     display: flex;
     background-color: var(--surface-color);
-    padding-top: 35px; /* Sát dưới Dynamic Island */
+    padding-top: env(safe-area-inset-top, 10px); /* Tự động sát mép theo thiết bị */
     border-bottom: 2px solid rgba(255, 215, 0, 0.1);
 }
 
