@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NVH Scanner</title>
+    <title>NVH Scanner Pro</title>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2D0B2D">
@@ -16,37 +16,55 @@
     <div class="app-container">
         <!-- Tabs Navigation -->
         <nav class="tabs-nav">
-            <button class="tab-btn active" onclick="switchTab('scan')">Quét Mã</button>
-            <button class="tab-btn" onclick="switchTab('history')">Lịch Sử</button>
+            <button class="tab-btn active" onclick="switchTab('scan')">QUÉT MÃ</button>
+            <button class="tab-btn" onclick="switchTab('history')">LỊCH SỬ</button>
         </nav>
 
         <!-- Main Content -->
         <main class="tab-content">
-            <!-- Scan Tab -->
+            <!-- Scan View -->
             <section id="scan-view" class="view active">
-                <div class="card scanner-card">
-                    <div id="reader"></div>
-                    <div class="status-badge" id="scan-status">Đang tìm camera...</div>
+                <!-- Mode Selector -->
+                <div class="mode-selector-container">
+                    <div class="mode-switch">
+                        <input type="radio" name="scanMode" id="modeSingle" value="single" checked>
+                        <label for="modeSingle">Quét từng mã</label>
+                        <input type="radio" name="scanMode" id="modeContinuous" value="continuous">
+                        <label for="modeContinuous">Quét liên tục</label>
+                    </div>
                 </div>
 
-                <div class="card info-card">
-                    <h3>Thông tin đơn hàng</h3>
-                    <div class="info-content">
-                        <p><strong>Nội dung mã:</strong> <span id="scanned-result">Chưa có thông tin</span></p>
-                        <p id="time-display" style="font-size: 0.8em; color: #888;"></p>
-                    </div>
-                    <button id="send-btn" class="primary-btn glow" disabled onclick="sendData()">GỬI LÊN GOOGLE SHEETS</button>
+                <!-- Main Scanner UI -->
+                <div class="scanner-container" id="scanner-ui">
+                    <div id="reader"></div>
+                    <div class="scan-overlay" id="scan-overlay"></div>
+                </div>
+
+                <div class="controls-container">
+                    <button id="start-btn" class="main-scan-btn glow" onclick="toggleScanner()">
+                        <span id="btn-text">BẮT ĐẦU QUÉT</span>
+                        <div class="btn-subtext" id="btn-subtext">Nhấn để khởi động Camera</div>
+                    </button>
+                </div>
+
+                <!-- Last Scan Status -->
+                <div class="last-scan-status" id="last-scan-info">
+                    <div class="status-header">Mã vừa quét:</div>
+                    <div class="status-content" id="scanned-result">Đang chờ...</div>
+                    <div class="status-footer" id="sync-status">Sẵn sàng</div>
                 </div>
             </section>
 
-            <!-- History Tab -->
+            <!-- History View -->
             <section id="history-view" class="view">
-                <div class="history-controls">
-                    <button class="secondary-btn" onclick="loadHistory()">TẢI LẠI</button>
+                <div class="history-header">
+                    <h3>Lịch sử quét (Lưu tại máy)</h3>
+                    <button class="icon-btn" onclick="clearLocalHistory()">
+                        <span>Xóa hết</span>
+                    </button>
                 </div>
                 <div id="history-list" class="history-list">
-                    <!-- History items will be inserted here -->
-                    <p class="empty-msg">Đang tải lịch sử...</p>
+                    <p class="empty-msg">Chưa có dữ liệu</p>
                 </div>
             </section>
         </main>
@@ -57,7 +75,7 @@
         </footer>
     </div>
 
-    <!-- Notification Toast -->
+    <!-- Toast Notification -->
     <div id="toast" class="toast"></div>
 
     <script src="app.js"></script>

@@ -2,7 +2,29 @@
 const APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzViEYJCUkGFTnIYmNZRMJ_Zix5yXfExvPn5yWx3nQ0/exec";
 
 let html5QrCode;
-let lastResult = "";
+let isScanning = false;
+let lastScanTime = 0;
+const SCAN_DELAY = 3000; // 3 giây để tránh quét trùng
+
+// Khởi tạo Audio Context cho tiếng "Tít"
+let audioCtx;
+function playBeep() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(880, audioCtx.currentTime); // Tần số cao cho tiếng tít thanh
+    
+    gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+    
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.1);
+}
 
 // Chuyển đổi giữa các Tab
 function switchTab(tab) {
@@ -12,126 +34,157 @@ function switchTab(tab) {
     if (tab === 'scan') {
         document.querySelector('.tab-btn:nth-child(1)').classList.add('active');
         document.getElementById('scan-view').classList.add('active');
-        startScanner();
     } else {
         document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
         document.getElementById('history-view').classList.add('active');
-        stopScanner();
-        loadHistory();
+        if (isScanning) toggleScanner(); // Dừng camera khi xem lịch sử
+        loadLocalHistory();
     }
 }
 
-// Khởi chạy trình quét mã vạch
-function startScanner() {
-    if (html5QrCode && html5QrCode.isScanning) return;
+// Bật/Tắt Camera
+async function toggleScanner() {
+    const btn = document.getElementById('start-btn');
+    const btnText = document.getElementById('btn-text');
+    const btnSub = document.getElementById('btn-subtext');
 
-    html5QrCode = new Html5Qrcode("reader");
-    const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+    if (!isScanning) {
+        // Bắt đầu quét
+        try {
+            if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
+            
+            // Kích hoạt âm thanh (Yêu cầu tương tác người dùng)
+            if (!audioCtx) playBeep();
 
-    html5QrCode.start(
-        { facingMode: "environment" }, 
-        config,
-        (decodedText, decodedResult) => {
-            // Khi quét thành công
-            onScanSuccess(decodedText);
-        },
-        (errorMessage) => {
-            // Lỗi khi đang tìm mã
+            await html5QrCode.start(
+                { facingMode: "environment" },
+                { fps: 15, qrbox: { width: 250, height: 250 } },
+                onScanSuccess
+            );
+
+            isScanning = true;
+            btn.classList.add('scanning');
+            btnText.innerText = "DỪNG QUÉT";
+            btnSub.innerText = "Camera đang hoạt động...";
+            document.getElementById('scanner-ui').style.display = 'block';
+        } catch (err) {
+            showToast("Không thể mở camera!");
+            console.error(err);
         }
-    ).catch((err) => {
-        console.error("Lỗi camera:", err);
-        document.getElementById('scan-status').innerText = "Không thể truy cập camera. Vui lòng cấp quyền!";
-    });
-}
-
-function stopScanner() {
-    if (html5QrCode && html5QrCode.isScanning) {
-        html5QrCode.stop().then(() => {
-            console.log("Dừng camera.");
-        }).catch(err => console.error(err));
+    } else {
+        // Dừng quét
+        await stopScanner();
     }
 }
 
-function onScanSuccess(decodedText) {
-    if (lastResult === decodedText) return; // Tránh quét lặp
+async function stopScanner() {
+    if (html5QrCode) {
+        await html5QrCode.stop();
+        isScanning = false;
+        const btn = document.getElementById('start-btn');
+        btn.classList.remove('scanning');
+        document.getElementById('btn-text').innerText = "BẮT ĐẦU QUÉT";
+        document.getElementById('btn-subtext').innerText = "Nhấn để khởi động Camera";
+    }
+}
+
+// Khi quét thành công
+async function onScanSuccess(decodedText) {
+    const now = Date.now();
+    if (now - lastScanTime < SCAN_DELAY) return; // Chặn quét quá nhanh
+
+    lastScanTime = now;
     
-    lastResult = decodedText;
+    // 1. Phản hồi tức thì
+    playBeep();
+    if (navigator.vibrate) navigator.vibrate(200);
+
+    // 2. Cập nhật giao diện
     document.getElementById('scanned-result').innerText = decodedText;
-    document.getElementById('time-display').innerText = "Thời gian: " + new Date().toLocaleString('vi-VN');
-    document.getElementById('send-btn').disabled = false;
-    document.getElementById('scan-status').innerText = "Đã nhận mã!";
+    document.getElementById('sync-status').innerText = "Đang gửi...";
+    document.getElementById('sync-status').style.color = "var(--primary-color)";
 
-    // Rung phản hồi (nếu thiết bị hỗ trợ)
-    if (navigator.vibrate) navigator.vibrate(100);
-}
-
-// Gửi dữ liệu lên Google Sheets
-async function sendData() {
-    if (APP_SCRIPT_URL === "YOUR_APPS_SCRIPT_URL_HERE") {
-        showToast("Lỗi: Chưa cấu hình URL Apps Script!");
-        return;
-    }
-
-    const btn = document.getElementById('send-btn');
-    btn.disabled = true;
-    showToast("Đang gửi dữ liệu...");
-
-    const data = {
+    // 3. Xử lý dữ liệu
+    const scanMode = document.querySelector('input[name="scanMode"]:checked').value;
+    const orderData = {
         orderId: "NVH-" + Math.random().toString(36).substr(2, 6).toUpperCase(),
-        content: lastResult,
+        content: decodedText,
         scanTime: new Date().toLocaleString('vi-VN')
     };
 
+    // Lưu vào máy (Local Storage)
+    saveToLocal(orderData);
+
+    // Tự động gửi lên Google Sheets
+    const success = await sendToGoogleSheets(orderData);
+
+    if (success) {
+        document.getElementById('sync-status').innerText = "Đã gửi thành công!";
+        document.getElementById('sync-status').style.color = "var(--success)";
+    } else {
+        document.getElementById('sync-status').innerText = "Lỗi gửi (Đã lưu máy)";
+        document.getElementById('sync-status').style.color = "var(--danger)";
+    }
+
+    // 4. Kiểm tra chế độ quét
+    if (scanMode === 'single') {
+        setTimeout(() => {
+            stopScanner();
+            showToast("Đã xong! Camera đã đóng.");
+        }, 500);
+    } else {
+        showToast("Tiếp tục quét mã tiếp theo...");
+    }
+}
+
+// Gửi lên Google Sheets
+async function sendToGoogleSheets(data) {
     try {
         const response = await fetch(APP_SCRIPT_URL, {
             method: "POST",
-            mode: "no-cors", // Cần mode no-cors cho Apps Script
+            mode: "no-cors",
             cache: "no-cache",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(data)
         });
-
-        // Với no-cors, chúng ta không thể đọc response body, nhưng thường là thành công
-        showToast("Gửi thành công!");
-        document.getElementById('scan-status').innerText = "Đã lưu đơn hàng!";
+        return true;
     } catch (error) {
-        console.error("Lỗi gửi dữ liệu:", error);
-        showToast("Gửi thất bại. Thử lại sau!");
-        btn.disabled = false;
+        console.error(error);
+        return false;
     }
 }
 
-// Tải lịch sử từ Google Sheets
-async function loadHistory() {
-    if (APP_SCRIPT_URL === "YOUR_APPS_SCRIPT_URL_HERE") return;
+// Lưu lịch sử cục bộ
+function saveToLocal(data) {
+    let history = JSON.parse(localStorage.getItem('nvh_scan_history') || '[]');
+    history.unshift(data); // Đưa lên đầu danh sách
+    localStorage.setItem('nvh_scan_history', JSON.stringify(history.slice(0, 50))); // Lưu tối đa 50 bản
+}
 
-    const listContainer = document.getElementById('history-list');
+function loadLocalHistory() {
+    const list = document.getElementById('history-list');
+    const history = JSON.parse(localStorage.getItem('nvh_scan_history') || '[]');
     
-    try {
-        const response = await fetch(APP_SCRIPT_URL);
-        const data = await response.json();
-        
-        listContainer.innerHTML = "";
-        
-        if (data.length === 0) {
-            listContainer.innerHTML = "<p class='empty-msg'>Chưa có dữ liệu lịch sử.</p>";
-            return;
-        }
+    if (history.length === 0) {
+        list.innerHTML = "<p class='empty-msg'>Chưa có dữ liệu nào trên máy.</p>";
+        return;
+    }
 
-        data.forEach(item => {
-            const el = document.createElement('div');
-            el.className = 'history-item';
-            el.innerHTML = `
-                <div class="history-item-header">
-                    <span>ID: ${item.orderId}</span>
-                    <span>${item.scanTime}</span>
-                </div>
-                <div class="history-item-content">${item.content}</div>
-            `;
-            listContainer.appendChild(el);
-        });
-    } catch (error) {
-        listContainer.innerHTML = "<p class='empty-msg'>Lỗi khi tải lịch sử.</p>";
+    list.innerHTML = history.map(item => `
+        <div class="history-item">
+            <div class="history-item-header">
+                <strong>ID: ${item.orderId}</strong>
+                <span class="history-item-time">${item.scanTime}</span>
+            </div>
+            <div class="history-item-content">${item.content}</div>
+        </div>
+    `).join('');
+}
+
+function clearLocalHistory() {
+    if (confirm("Bạn có chắc chắn muốn xóa toàn bộ lịch sử trên máy này?")) {
+        localStorage.removeItem('nvh_scan_history');
+        loadLocalHistory();
     }
 }
 
@@ -139,10 +192,5 @@ function showToast(msg) {
     const toast = document.getElementById('toast');
     toast.innerText = msg;
     toast.classList.add('show');
-    setTimeout(() => toast.classList.remove('show'), 3000);
+    setTimeout(() => toast.classList.remove('show'), 2500);
 }
-
-// Khởi chạy mặc định
-window.addEventListener('load', () => {
-    startScanner();
-});
