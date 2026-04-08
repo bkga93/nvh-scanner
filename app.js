@@ -50,17 +50,32 @@ function switchTab(tab) {
     const btns = ['btn-tab-scan', 'btn-tab-history', 'btn-tab-data'];
     
     views.forEach(v => {
-        document.getElementById(v).style.display = 'none';
-        document.getElementById(v).classList.remove('active');
+        const el = document.getElementById(v);
+        if (el) {
+            el.style.display = 'none';
+            el.classList.remove('active');
+        }
     });
-    btns.forEach(b => document.getElementById(b).classList.remove('active'));
 
-    const activeView = tab + '-view';
-    const activeBtn = 'btn-tab-' + tab;
+    btns.forEach(b => {
+        const el = document.getElementById(b);
+        if (el) el.classList.remove('active');
+    });
+
+    const activeViewId = tab + '-view';
+    const activeBtnId = 'btn-tab-' + tab;
     
-    document.getElementById(activeView).style.display = 'flex';
-    document.getElementById(activeView).classList.add('active');
-    document.getElementById(activeBtn).classList.add('active');
+    const activeView = document.getElementById(activeViewId);
+    const activeBtn = document.getElementById(activeBtnId);
+
+    if (activeView) {
+        activeView.style.display = 'flex';
+        activeView.classList.add('active');
+    }
+    
+    if (activeBtn) {
+        activeBtn.classList.add('active');
+    }
 
     if (tab !== 'scan' && isScanning) stopScanner();
     
