@@ -1694,12 +1694,18 @@ function isMobileDevice() {
 }
 
 window.onload = () => {
-    // Khởi tạo mặc định
-    if (localStorage.getItem('nvh_v2.0.0_init') !== 'done') {
-        // Xóa các rác cũ bản 1.x
+    // --- BẢN VÁ v2.0.1: CƯỠNG BỨC NHẬP KEY LẦN ĐẦU ---
+    if (localStorage.getItem('nvh_v2.0.1_reset') !== 'done') {
         localStorage.removeItem('nvh_verified');
         localStorage.removeItem('nvh_auth_skip');
-        localStorage.setItem('nvh_v2.0.0_init', 'done');
+        // Phải xóa cả trong IndexedDB để ép hiện Activation Overlay
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        request.onsuccess = (e) => {
+            const dbRef = e.target.result;
+            const tx = dbRef.transaction(STORE_NAME, 'readwrite');
+            tx.objectStore(STORE_NAME).delete('nvh_verified');
+        };
+        localStorage.setItem('nvh_v2.0.1_reset', 'done');
     }
 
     if (localStorage.getItem('nvh_sound_type') === null) {
