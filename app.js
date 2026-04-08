@@ -13,22 +13,51 @@ let remoteDataCache = [];
 let selectedRemoteItem = null;
 let currentPendingScan = null; // Lưu trữ mã đang chờ xử lý trùng lặp
 
-// Khởi tạo Audio Context
+// Cấu hình âm thanh & rung
 let audioCtx;
-function playBeep() {
+const SOUND_PRESETS = {
+    standard: { freq: 1200, type: 'sine', duration: 0.1, gain: 1.0 },
+    double: { freq: 1500, type: 'square', duration: 0.05, repeat: 2, gain: 0.8 },
+    deep: { freq: 400, type: 'triangle', duration: 0.2, gain: 1.2 },
+    melody: { freq: [1000, 1200, 1500], type: 'sine', duration: 0.08, gain: 0.9 }
+};
+
+function playBeep(presetKey = null) {
     try {
+        const key = presetKey || localStorage.getItem('nvh_sound_type') || 'standard';
+        const preset = SOUND_PRESETS[key];
+        
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         if (audioCtx.state === 'suspended') audioCtx.resume();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = "sine";
-        osc.frequency.setValueAtTime(1200, audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.1);
+
+        const playTone = (freq, startTime, duration) => {
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.type = preset.type;
+            osc.frequency.setValueAtTime(freq, startTime);
+            gainNode.gain.setValueAtTime(preset.gain, startTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            osc.start(startTime);
+            osc.stop(startTime + duration);
+        };
+
+        let now = audioCtx.currentTime;
+        if (Array.isArray(preset.freq)) {
+            preset.freq.forEach((f, i) => playTone(f, now + (i * preset.duration), preset.duration));
+        } else if (preset.repeat) {
+            for (let i = 0; i < preset.repeat; i++) {
+                playTone(preset.freq, now + (i * (preset.duration + 0.05)), preset.duration);
+            }
+        } else {
+            playTone(preset.freq, now, preset.duration);
+        }
+
+        // Thực hiện Rung nếu bật
+        if (localStorage.getItem('nvh_vibrate') !== 'false') {
+            if (navigator.vibrate) navigator.vibrate(200);
+        }
     } catch (e) { console.warn("Audio Context error:", e); }
 }
 
@@ -443,6 +472,11 @@ function validatePasscode() {
         localStorage.setItem('nvh_verified', 'true');
         document.getElementById('passcode-modal').style.display = 'none';
         showToast("Xác thực thành công!");
+        // Khởi tạo mặc định sau xác thực
+        if (localStorage.getItem('nvh_sound_type') === null) {
+            localStorage.setItem('nvh_sound_type', 'standard');
+            localStorage.setItem('nvh_vibrate', 'true');
+        }
     } else {
         errorEl.style.display = 'block';
         document.getElementById('passcode-input').value = '';
@@ -450,7 +484,35 @@ function validatePasscode() {
     }
 }
 
+// --- LOGIC CÀI ĐẶT ---
+function toggleSettingsModal(show) {
+    const modal = document.getElementById('settings-modal');
+    if (show) {
+        // Load cấu hình hiện tại lên UI
+        document.getElementById('sound-select').value = localStorage.getItem('nvh_sound_type') || 'standard';
+        document.getElementById('vibrate-toggle').checked = localStorage.getItem('nvh_vibrate') !== 'false';
+        modal.style.display = 'flex';
+    } else {
+        // Lưu cấu hình từ UI vào localStorage
+        localStorage.setItem('nvh_sound_type', document.getElementById('sound-select').value);
+        localStorage.setItem('nvh_vibrate', document.getElementById('vibrate-toggle').checked);
+        modal.style.display = 'none';
+        showToast("Đã lưu cài đặt!");
+    }
+}
+
+function previewSound() {
+    const key = document.getElementById('sound-select').value;
+    playBeep(key);
+}
+
 window.onload = () => {
+    // Khởi tạo mặc định nếu chưa có
+    if (localStorage.getItem('nvh_sound_type') === null) {
+        localStorage.setItem('nvh_sound_type', 'standard');
+        localStorage.setItem('nvh_vibrate', 'true');
+    }
+    
     checkSecurity(); // Kiểm tra bảo mật ngay khi tải trang
     loadLocalHistory();
     const cache = localStorage.getItem('nvh_remote_cache');

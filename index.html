@@ -28,7 +28,7 @@
         <main class="tab-content">
             <!-- Scan View -->
             <section id="scan-view" class="view active">
-                <!-- Mode Selector -->
+                <!-- Mode & Settings Header -->
                 <div class="mode-selector-container">
                     <div class="mode-switch">
                         <input type="radio" name="scanMode" id="modeSingle" value="single" checked>
@@ -36,6 +36,7 @@
                         <input type="radio" name="scanMode" id="modeContinuous" value="continuous">
                         <label for="modeContinuous">Quét liên tục</label>
                     </div>
+                    <button class="settings-entry-btn" onclick="toggleSettingsModal(true)">⚙️</button>
                 </div>
 
                 <!-- Main Scanner UI -->
@@ -134,7 +135,35 @@
         <!-- Copyright -->
         <footer class="footer">
             <span class="copyright">Thực hiện bởi <i>NVH</i></span>
+            <div class="app-version">Version 1.1</div>
         </footer>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal-overlay">
+        <div class="modal-content settings-screen">
+            <h3>CÀI ĐẶT THIẾT BỊ</h3>
+            
+            <div class="settings-group">
+                <label>Kiểu âm thanh thông báo</label>
+                <select id="sound-select" class="settings-select" onchange="previewSound()">
+                    <option value="standard">Mặc định (Bíp đơn)</option>
+                    <option value="double">Bíp kép (Nhanh)</option>
+                    <option value="deep">Âm trầm (Mạnh)</option>
+                    <option value="melody">Giai điệu (Thành công)</option>
+                </select>
+            </div>
+
+            <div class="settings-group toggle-group">
+                <label>Rung khi bắt mã</label>
+                <div class="toggle-switch">
+                    <input type="checkbox" id="vibrate-toggle" checked>
+                    <span class="slider"></span>
+                </div>
+            </div>
+
+            <button class="modal-btn btn-overwrite" onclick="toggleSettingsModal(false)">LƯU & ĐÓNG</button>
+        </div>
     </div>
 
     <!-- Duplicate Alert Modal -->
