@@ -1686,6 +1686,15 @@ function isMobileDevice() {
 }
 
 window.onload = () => {
+    // --- BẢN VÁ v1.9.1: BẮT BUỘC RESET ĐỂ NHẬP PASS LẦN ĐẦU TIÊN ---
+    if (localStorage.getItem('nvh_v1.9.1_reset') !== 'done') {
+        localStorage.removeItem('nvh_verified');
+        localStorage.removeItem('nvh_auth_skip');
+        localStorage.setItem('nvh_v1.9.1_reset', 'done');
+        // Xóa tạm cờ session để bắt hiện modal
+        window.isVerifiedSession = false;
+    }
+
     // Khởi tạo mặc định
     if (localStorage.getItem('nvh_sound_type') === null) {
         localStorage.setItem('nvh_sound_type', 'standard');
