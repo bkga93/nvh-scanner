@@ -459,9 +459,13 @@ function selectRemoteItem(item) {
     selectedRemoteItem = item;
     displayRemoteData();
 
+    document.getElementById('item-detail-panel').style.display = 'block';
     document.getElementById('detail-time').innerText = item.scanTime;
     document.getElementById('detail-id').innerText = item.orderId;
     document.getElementById('detail-content').innerText = item.content;
+    
+    // Cuộn xuống để xem chi tiết
+    document.getElementById('item-detail-panel').scrollIntoView({ behavior: 'smooth' });
     
     const timeEl = document.getElementById('detail-time');
     timeEl.style.animation = 'none';
@@ -871,16 +875,64 @@ function updateUploadIndicator() {
 
 // --- LOGIC XEM LẠI (REVIEW TAB) ---
 
-function lookupAndPlayVideo() {
-    const orderId = document.getElementById('review-order-id').value.trim();
-    if (!orderId) return;
+// --- LOGIC GỢI Ý TAB XEM LẠI ---
+let selectedReviewItem = null;
+function filterReviewData() {
+    const query = document.getElementById('review-order-id').value.toLowerCase().trim();
+    const list = document.getElementById('review-data-list');
+    
+    if (query.length < 3) {
+        list.style.display = 'none';
+        return;
+    }
 
-    // Ưu tiên tìm trong Local HDD (Yêu cầu người dùng chọn file vì bảo mật trình duyệt)
-    showToast("Vui lòng chọn 2 file video của mã " + orderId);
-    promptLocalFiles();
+    const filtered = remoteDataCache.filter(item => 
+        (item.content && item.content.toLowerCase().includes(query)) || 
+        (item.orderId && item.orderId.toLowerCase().includes(query))
+    );
+
+    if (filtered.length > 0) {
+        list.style.display = 'block';
+        list.innerHTML = filtered.slice(0, 10).map(item => `
+            <div class="history-item" onclick='selectReviewItem(${JSON.stringify(item).replace(/'/g, "&apos;")})'>
+                <div class="history-item-header">
+                    <strong>ID: ${item.orderId}</strong>
+                    <span class="history-item-time">${item.scanTime}</span>
+                </div>
+            </div>
+        `).join('');
+    } else {
+        list.innerHTML = "<p class='empty-msg'>Không tìm thấy mã đơn này.</p>";
+    }
 }
 
-async function promptLocalFiles() {
+function selectReviewItem(item) {
+    selectedReviewItem = item;
+    document.getElementById('review-order-id').value = item.orderId;
+    document.getElementById('review-data-list').style.display = 'none';
+    
+    // Hiển thị panel thông tin đơn đang chọn
+    const panel = document.getElementById('review-detail-panel');
+    panel.style.display = 'block';
+    document.getElementById('review-detail-id').innerText = item.orderId;
+    document.getElementById('review-detail-time').innerText = item.scanTime;
+    
+    showToast("Đã chọn đơn: " + item.orderId);
+}
+
+function lookupAndPlayVideo() {
+    const orderId = document.getElementById('review-order-id').value.trim();
+    if (!orderId) {
+        showToast("⚠️ Vui lòng nhập hoặc chọn mã đơn!");
+        return;
+    }
+
+    // Ưu tiên tìm trong Local HDD (Yêu cầu người dùng chọn file vì bảo mật trình duyệt)
+    showToast("Vui lòng chọn video của mã " + orderId);
+    promptLocalFiles(orderId);
+}
+
+async function promptLocalFiles(targetOrderId = null) {
     const input = document.createElement('input');
     input.type = 'file';
     input.multiple = true;
@@ -891,14 +943,30 @@ async function promptLocalFiles() {
 
         const v1 = document.getElementById('video-review-1');
         const v2 = document.getElementById('video-review-2');
+        let matched = false;
 
         files.forEach(file => {
+            // Kiểm tra xem file có chứa mã đơn hàng không
+            const fileName = file.name.toUpperCase();
+            const orderId = (targetOrderId || "").toUpperCase();
+            
+            if (orderId && !fileName.includes(orderId)) {
+                return; // Bỏ qua file không khớp mã đơn
+            }
+
             const url = URL.createObjectURL(file);
-            if (file.name.includes('CAM1')) v1.src = url;
-            if (file.name.includes('CAM2')) v2.src = url;
-            // Nếu chỉ có 1 cam hoặc tên không đúng cam, cứ gán đại
-            if (files.length === 1) v1.src = url;
+            if (fileName.includes('CAM1')) { v1.src = url; matched = true; }
+            else if (fileName.includes('CAM2')) { v2.src = url; matched = true; }
+            else if (files.length === 1) { v1.src = url; matched = true; }
         });
+
+        if (!matched) {
+            showToast("❌ Không tìm thấy video hợp lệ cho mã đơn này!");
+            v1.src = ""; v2.src = "";
+        } else {
+            showToast("✔️ Đã tải video thành công!");
+            syncPlayPause(); // Tự động phát
+        }
     };
     input.click();
 }
