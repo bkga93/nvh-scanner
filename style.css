@@ -56,8 +56,8 @@ body {
 .tabs-nav {
     display: flex;
     background-color: var(--surface-color);
-    padding-top: 45px; /* Tai thỏ iPhone */
-    border-bottom: 2px solid rgba(255, 215, 0, 0.1);
+    padding-top: 0; /* Đưa lên sát header */
+    border-bottom: 1px solid rgba(255, 215, 0, 0.1);
 }
 
 .tab-btn {
@@ -99,8 +99,8 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 15px 15px 15px 15px;
-    border-bottom: 2px solid rgba(255, 215, 0, 0.1);
+    padding: 35px 15px 5px 15px; /* Tăng top cho notch, giảm bottom để thu gọn */
+    border-bottom: 1px solid rgba(255, 215, 0, 0.1);
     background-color: #1A051A;
     z-index: 100;
 }
