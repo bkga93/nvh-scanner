@@ -131,7 +131,7 @@ async function toggleScanner() {
                 { 
                     fps: 25, 
                     qrbox: (w, h) => {
-                        const size = Math.min(w, h);
+                        const size = Math.min(w, h) * 0.85; // Tăng kích thước khung quét lên 85%
                         return { width: size, height: size };
                     },
                     showViewFinder: false 
@@ -580,26 +580,91 @@ function validatePasscode() {
 function toggleDrawer(show) {
     const drawer = document.getElementById('side-drawer');
     const overlay = document.getElementById('drawer-overlay');
-    
     if (show) {
-        // Load cấu hình lên UI trước khi hiện
-        document.getElementById('sound-select').value = localStorage.getItem('nvh_sound_type') || 'standard';
-        document.getElementById('vibrate-toggle').checked = localStorage.getItem('nvh_vibrate') !== 'false';
-        
-        updateCameraList(); // Cập nhật danh sách camera khi mở menu
-        
         drawer.classList.add('active');
-        overlay.classList.add('active');
+        if (overlay) overlay.classList.add('active');
     } else {
         drawer.classList.remove('active');
-        overlay.classList.remove('active');
+        if (overlay) overlay.classList.remove('active');
     }
 }
 
-function previewSound() {
-    const key = document.getElementById('sound-select').value;
-    playBeep(key);
-    saveDeviceSettings(); // Lưu ngay khi đổi âm thanh
+function openSettings(group) {
+    const template = document.getElementById('tmpl-' + group);
+    const body = document.getElementById('settings-body');
+    const title = document.getElementById('settings-title');
+    const modal = document.getElementById('settings-modal');
+    
+    if (!template || !body) return;
+    
+    const titles = {
+        'scan': 'THIẾT LẬP QUÉT',
+        'storage': 'LƯU TRỮ & PC MODE',
+        'camera': 'CẤU HÌNH CAMERA',
+        'changelog': 'NHẬT KÝ THAY ĐỔI'
+    };
+    title.innerText = titles[group] || 'CÀI ĐẶT';
+    body.innerHTML = template.innerHTML;
+    
+    if (group === 'scan') {
+        const soundSelect = document.getElementById('sound-select-modal');
+        const vibrateToggle = document.getElementById('vibrate-toggle-modal');
+        if (soundSelect) soundSelect.value = localStorage.getItem('nvh_sound_type') || 'standard';
+        if (vibrateToggle) vibrateToggle.checked = localStorage.getItem('nvh_vibrate') !== 'false';
+    } else if (group === 'storage') {
+        const pcToggle = document.getElementById('pc-mode-toggle-modal');
+        const driveInput = document.getElementById('drive-folder-id-modal');
+        const hddStatus = document.getElementById('hdd-status-modal');
+        if (pcToggle) pcToggle.checked = localStorage.getItem('nvh_pc_mode') === 'true';
+        if (driveInput) driveInput.value = localStorage.getItem('nvh_drive_folder_id') || '';
+        if (hddStatus && hddFolderHandle) {
+            hddStatus.innerText = "Đã cấp quyền thư mục Local";
+            hddStatus.style.color = "var(--success)";
+        }
+    } else if (group === 'camera') {
+        updateCameraList(true);
+    }
+    
+    toggleDrawer(false);
+    modal.style.display = 'flex';
+}
+
+function closeSettings() {
+    document.getElementById('settings-modal').style.display = 'none';
+}
+
+function saveModalSettings() {
+    const sound = document.getElementById('sound-select-modal')?.value;
+    const vibrate = document.getElementById('vibrate-toggle-modal')?.checked;
+    const driveId = document.getElementById('drive-folder-id-modal')?.value;
+    const scannerCam = document.getElementById('scanner-cam-select-modal')?.value;
+    const m1Cam = document.getElementById('monitor1-cam-select-modal')?.value;
+    const m2Cam = document.getElementById('monitor2-cam-select-modal')?.value;
+
+    if (sound !== undefined) localStorage.setItem('nvh_sound_type', sound);
+    if (vibrate !== undefined) localStorage.setItem('nvh_vibrate', vibrate);
+    if (driveId !== undefined) localStorage.setItem('nvh_drive_folder_id', driveId);
+    
+    if (scannerCam) localStorage.setItem('nvh_scanner_cam_id', scannerCam);
+    if (m1Cam) localStorage.setItem('nvh_monitor1_cam_id', m1Cam);
+    if (m2Cam) localStorage.setItem('nvh_monitor2_cam_id', m2Cam);
+    
+    // Đồng bộ ngược lại cho cũ
+    if (scannerCam) localStorage.setItem('nvh_camera_id', scannerCam);
+
+    if (isScanning) {
+        stopScanner().then(() => { if (!pcMode) toggleScanner(); else startScanning(); });
+    }
+}
+
+function togglePCModeFromModal(checked) {
+    localStorage.setItem('nvh_pc_mode', checked);
+    togglePCMode();
+}
+
+function previewSound(val) {
+    playBeep(val);
+    saveModalSettings();
 }
 
 window.onload = () => {
@@ -1202,21 +1267,21 @@ function saveDeviceSettings() {
     }
 }
 
-async function updateCameraList() {
-    const sScanner = document.getElementById('scanner-cam-select');
-    const sM1 = document.getElementById('monitor1-cam-select');
-    const sM2 = document.getElementById('monitor2-cam-select');
+async function updateCameraList(isModal = false) {
+    const sScanner = document.getElementById(isModal ? 'scanner-cam-select-modal' : 'scanner-cam-select');
+    const sM1 = document.getElementById(isModal ? 'monitor1-cam-select-modal' : 'monitor1-cam-select');
+    const sM2 = document.getElementById(isModal ? 'monitor2-cam-select-modal' : 'monitor2-cam-select');
+    if (!sScanner) return;
+
     try {
         const devices = await Html5Qrcode.getCameras();
-        console.log("Devices found:", devices);
-        
         if (devices && devices.length > 0) {
             const options = devices.map(d => `<option value="${d.id}">${d.label || 'Camera ' + d.id.substr(0,4)}</option>`).join('');
             sScanner.innerHTML = options;
             sM1.innerHTML = options;
             sM2.innerHTML = '<option value="">-- Không dùng --</option>' + options;
             
-            sScanner.value = localStorage.getItem('nvh_scanner_cam_id') || devices[0].id;
+            sScanner.value = localStorage.getItem('nvh_scanner_cam_id') || localStorage.getItem('nvh_camera_id') || devices[0].id;
             sM1.value = localStorage.getItem('nvh_monitor1_cam_id') || devices[0].id;
             sM2.value = localStorage.getItem('nvh_monitor2_cam_id') || "";
         } else {
@@ -1225,8 +1290,6 @@ async function updateCameraList() {
         }
     } catch (err) { 
         console.error("Camera detection error:", err); 
-        const errOpt = '<option value="">⚠️ Lỗi nhận diện</option>';
-        sScanner.innerHTML = errOpt; sM1.innerHTML = errOpt; sM2.innerHTML = errOpt;
     }
 }
 
@@ -1242,7 +1305,13 @@ async function startScanning() {
     
     try {
         if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
-        await html5QrCode.start(camId, { fps: 10, qrbox: { width: 250, height: 250 } }, onScanSuccess);
+        await html5QrCode.start(camId, { 
+            fps: 20, 
+            qrbox: (w, h) => {
+                const size = Math.min(w, h) * 0.85; // To gần bằng khung ngoài
+                return { width: size, height: size };
+            }
+        }, onScanSuccess);
         isScanning = true;
         mainText.innerText = "DỪNG QUÉT";
         btn.classList.add('active');

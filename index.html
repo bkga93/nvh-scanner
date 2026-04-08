@@ -211,104 +211,149 @@
     <!-- Sidebar (Drawer) Overlay -->
     <div id="drawer-overlay" class="drawer-overlay" onclick="toggleDrawer(false)"></div>
 
-    <!-- Side Sidebar (Drawer) -->
     <div id="side-drawer" class="side-drawer">
         <div class="drawer-header">
-            <h3>CÀI ĐẶT & THÔNG TIN</h3>
+            <h3>DANH MỤC CÀI ĐẶT</h3>
             <button class="close-drawer" onclick="toggleDrawer(false)">×</button>
         </div>
         
         <div class="drawer-content">
-            <!-- Sound & Vibrate Section -->
+            <div class="menu-group-list">
+                <button class="menu-group-item" onclick="openSettings('scan')">
+                    <span class="icon">🎯</span>
+                    <div class="text">
+                        <span class="title">Thiết lập Quét</span>
+                        <span class="desc">Âm thanh, Rung & Chế độ</span>
+                    </div>
+                </button>
+                <button class="menu-group-item" onclick="openSettings('storage')">
+                    <span class="icon">💾</span>
+                    <div class="text">
+                        <span class="title">Lưu trữ & PC Mode</span>
+                        <span class="desc">Google Drive, HDD & Chế độ PC</span>
+                    </div>
+                </button>
+                <button class="menu-group-item" onclick="openSettings('camera')">
+                    <span class="icon">📷</span>
+                    <div class="text">
+                        <span class="title">Cấu hình Camera</span>
+                        <span class="desc">Chọn thiết bị quét & giám sát</span>
+                    </div>
+                </button>
+                <button class="menu-group-item" onclick="openSettings('changelog')">
+                    <span class="icon">📜</span>
+                    <div class="text">
+                        <span class="title">Nhật ký thay đổi</span>
+                        <span class="desc">Xem lịch sử cập nhật ứng dụng</span>
+                    </div>
+                </button>
+            </div>
+        </div>
+
+        <div class="drawer-footer">
+            <div class="version-info">NVH Scanner Pro — v1.7.3</div>
+        </div>
+    </div>
+
+    <!-- Unified Settings Modal -->
+    <div id="settings-modal" class="modal-overlay">
+        <div class="modal-content settings-modal-content">
+            <div class="modal-header">
+                <h3 id="settings-title">CÀI ĐẶT</h3>
+                <button class="close-modal" onclick="closeSettings()">×</button>
+            </div>
+            
+            <div id="settings-body" class="modal-scroll-area">
+                <!-- Group contents will be injected here via JS -->
+            </div>
+
+            <div class="modal-footer">
+                <button class="modal-btn btn-overwrite" onclick="closeSettings()">HOÀN TẤT</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Template for Settings (Hidden) -->
+    <div id="settings-templates" style="display: none;">
+        <!-- Scan Settings -->
+        <div id="tmpl-scan">
             <div class="settings-group">
                 <label>Kiểu âm thanh thông báo</label>
-                <select id="sound-select" class="settings-select" onchange="previewSound()">
+                <select id="sound-select-modal" class="settings-select" onchange="previewSound(this.value)">
                     <option value="standard">Mặc định (Bíp đơn)</option>
                     <option value="double">Bíp kép (Nhanh)</option>
                     <option value="deep">Âm trầm (Mạnh)</option>
                     <option value="melody">Giai điệu (Thành công)</option>
                 </select>
             </div>
-
             <div class="settings-group toggle-group">
                 <label>Rung khi bắt mã</label>
                 <label class="toggle-switch">
-                    <input type="checkbox" id="vibrate-toggle" onchange="saveDeviceSettings()" checked>
+                    <input type="checkbox" id="vibrate-toggle-modal" onchange="saveModalSettings()" checked>
                     <span class="slider"></span>
                 </label>
             </div>
+        </div>
 
-            <div class="settings-divider"></div>
-
+        <!-- Storage Settings -->
+        <div id="tmpl-storage">
             <div class="settings-group toggle-group">
                 <label>Chế độ PC (Đa màn hình)</label>
                 <label class="toggle-switch">
-                    <input type="checkbox" id="pc-mode-toggle" onchange="togglePCMode()">
+                    <input type="checkbox" id="pc-mode-toggle-modal" onchange="togglePCModeFromModal(this.checked)">
                     <span class="slider"></span>
                 </label>
             </div>
-
             <div class="settings-divider"></div>
-
+            <div class="settings-group">
+                <label>ID Thư mục Google Drive</label>
+                <input type="text" id="drive-folder-id-modal" class="settings-select" placeholder="Dán ID thư mục tại đây..." onchange="saveModalSettings()">
+            </div>
+            <div class="settings-divider"></div>
             <div class="settings-group">
                 <label>Vị trí lưu Video (Ổ cứng)</label>
                 <button class="modal-btn btn-append" onclick="requestHDDPermission()" style="width: 100%;">CẤP QUYỀN THƯ MỤC</button>
-                <div id="hdd-status" class="settings-hint">Chỉ hỗ trợ PC Chrome/Edge</div>
-                <button class="modal-btn btn-append" onclick="clearLocalVideoCache()" style="width: 100%; background: var(--danger); margin-top: 10px;">XOÁ BỘ NHỚ VIDEO</button>
-                <div class="settings-hint">Giải phóng dung lượng iPhone/Mobile</div>
+                <div id="hdd-status-modal" class="settings-hint" style="margin-top: 5px;">Hỗ trợ PC Chrome/Edge</div>
+                <button class="modal-btn btn-append" onclick="clearLocalVideoCache()" style="width: 100%; background: var(--danger); margin-top: 15px;">XOÁ BỘ NHỚ VIDEO</button>
+                <div class="settings-hint" style="margin-top: 5px;">Giải phóng dung lượng iPhone/Mobile</div>
             </div>
+        </div>
 
-            <div class="settings-divider"></div>
-
+        <!-- Camera Settings -->
+        <div id="tmpl-camera">
             <div class="settings-group">
-                <label style="color: var(--primary-color);">CẤU HÌNH CAMERA</label>
-                <button class="modal-btn" onclick="refreshCameraList()" style="width: 100%; margin-bottom: 12px; font-size: 0.8rem; background: #2a2a4a; border: 1px solid var(--primary-color);">
+                <label style="color: var(--primary-color);">CẤU HÌNH THIẾT BỊ</label>
+                <button class="modal-btn" onclick="refreshCameraList()" style="width: 100%; margin-bottom: 20px; font-size: 0.8rem; background: rgba(255,215,0,0.1); border: 1px solid var(--primary-color);">
                     🔄 LÀM MỚI DANH SÁCH CAMERA
                 </button>
                 
-                <div class="cam-select-item" style="margin-bottom: 10px;">
+                <div class="cam-select-item" style="margin-bottom: 15px;">
                     <label style="font-size: 0.8rem;">1. Camera Quét (Scanner)</label>
-                    <select id="scanner-cam-select" class="settings-select" onchange="saveDeviceSettings()"></select>
+                    <select id="scanner-cam-select-modal" class="settings-select" onchange="saveModalSettings()"></select>
                 </div>
-                <div class="cam-select-item" style="margin-bottom: 10px;">
-                    <label style="font-size: 0.8rem;">2. Camera Góc 1 (Chính)</label>
-                    <select id="monitor1-cam-select" class="settings-select" onchange="saveDeviceSettings()"></select>
+                <div class="cam-select-item" style="margin-bottom: 15px;">
+                    <label style="font-size: 0.8rem;">2. Camera Góc 1 (Monitor)</label>
+                    <select id="monitor1-cam-select-modal" class="settings-select" onchange="saveModalSettings()"></select>
                 </div>
-                <div class="cam-select-item" style="margin-bottom: 10px;">
-                    <label style="font-size: 0.8rem;">3. Camera Góc 2 (Phụ)</label>
-                    <select id="monitor2-cam-select" class="settings-select" onchange="saveDeviceSettings()"></select>
+                <div class="cam-select-item" style="margin-bottom: 15px;">
+                    <label style="font-size: 0.8rem;">3. Camera Góc 2 (Monitor)</label>
+                    <select id="monitor2-cam-select-modal" class="settings-select" onchange="saveModalSettings()"></select>
                 </div>
             </div>
+        </div>
 
-            <div class="settings-divider"></div>
-
-            <div id="pc-camera-2-group" class="settings-group" style="display: none;">
-                <label>Thiết bị Camera 2 (Toàn cảnh)</label>
-                <select id="camera-2-select" class="settings-select" onchange="saveDeviceSettings()">
-                    <option value="">Đang dò tìm camera...</option>
-                </select>
-            </div>
-
-            <div class="settings-divider"></div>
-
-            <div class="settings-group">
-                <label>ID Thư mục Google Drive</label>
-                <input type="text" id="drive-folder-id" class="settings-select" placeholder="Dán ID thư mục tại đây..." onchange="saveDeviceSettings()">
-            </div>
-
-            <div class="settings-group">
-                <label>Vị trí lưu Video (Ổ cứng)</label>
-                <button class="modal-btn btn-append" onclick="requestHDDPermission()" style="width: 100%;">CẤP QUYỀN THƯ MỤC</button>
-                <div id="hdd-status" class="settings-hint">Chưa chọn thư mục (Chỉ PC Chrome/Edge)</div>
-                <button class="modal-btn btn-append" onclick="clearLocalVideoCache()" style="width: 100%; background: var(--danger); margin-top: 10px;">XOÁ BỘ NHỚ VIDEO</button>
-                <div class="settings-hint">Giải phóng dung lượng iPhone/Mobile</div>
-            </div>
-
-            <!-- Changelog Section -->
-            <div class="settings-divider"></div>
+        <!-- Changelog Template -->
+        <div id="tmpl-changelog">
             <div class="changelog-container">
-                <label>NHẬT KÝ THAY ĐỔI</label>
                 <div class="changelog-list">
+                    <div class="changelog-item">
+                        <span class="ver-tag">v1.7.3</span>
+                        <ul>
+                            <li>Tái cấu trúc Menu: Gom nhóm cài đặt thông minh và giao diện Modal chuyên nghiệp.</li>
+                            <li>Sửa lỗi chọn Camera trên Mobile: Thống nhất logic nhận diện camera.</li>
+                            <li>Nâng cấp khung hình quét: Tự động mở rộng khung quét lên 85% diện tích màn hình.</li>
+                        </ul>
+                    </div>
                     <div class="changelog-item">
                         <span class="ver-tag">v1.7.0</span>
                         <ul>
@@ -318,47 +363,10 @@
                             <li>Thêm tính năng Xoá bộ nhớ video để giải phóng dung lượng.</li>
                         </ul>
                     </div>
-                    <div class="changelog-item">
-                        <span class="ver-tag">v1.6.9</span>
-                        <ul>
-                            <li>Tái cấu trúc bảng chi tiết: Ưu tiên Mã vận chuyển và Thời gian quét.</li>
-                            <li>Đồng bộ hóa tìm kiếm: Sử dụng Mã vận chuyển làm định danh chính.</li>
-                            <li>Bổ sung cài đặt "Vị trí lưu Video" trong menu Drawer.</li>
-                            <li>Di chuyển nút Copy sang dòng Mã vận chuyển.</li>
-                        </ul>
-                    </div>
-                    <div class="changelog-item">
-                        <span class="ver-tag">v1.6.8</span>
-                        <ul>
-                            <li>Quản lý video thông minh: Tự động kiểm tra Cloud/Máy.</li>
-                            <li>Tích hợp nút Tải về (Download) kèm thanh tiến trình trực quan.</li>
-                            <li>Nâng cấp tìm kiếm tab Xem lại: Tìm theo mã vận chuyển.</li>
-                            <li>Bổ sung nút Copy mã đơn hàng và làm nổi bật thời gian quét.</li>
-                        </ul>
-                    </div>
-                    <div class="changelog-item">
-                        <span class="ver-tag">v1.6.7</span>
-                        <ul>
-                            <li>Cải thiện Tab Xem lại: Điều khiển xuống dưới, video xếp chồng dọc "Super-Size".</li>
-                            <li>Bổ sung gợi ý tìm kiếm đơn hàng (Search Suggestion) trong tab Xem lại.</li>
-                            <li>Tích hợp bảng thông tin đơn hàng đã chọn và nút Cập nhật nhanh.</li>
-                            <li>Cảnh báo chính xác khi video không khớp mã đơn hàng.</li>
-                        </ul>
-                    </div>
-                    <div class="changelog-item">
-                        <span class="ver-tag">v1.6.6</span>
-                        <ul>
-                            <li>Sửa lỗi bảng chi tiết dữ liệu không hiển thị nội dung.</li>
-                            <li>Tối ưu hóa logic tự động bật PC Mode trên máy tính.</li>
-                            <li>Nâng cấp hệ thống Modal và Toast với hiệu ứng làm mờ (Blur effect).</li>
-                        </ul>
-                    </div>
-                    <div class="changelog-item">
-                        <span class="ver-tag">v1.6.5</span>
-                        <ul>
-                            <li>Bổ sung điều khiển ghi hình thủ công trên màn hình Monitor.</li>
-                            <li>Tự động chặn PC Mode trên thiết bị di động.</li>
-                            <li>Sửa lỗi bố cục Monitor và đồng bộ Version.</li>
+                </div>
+            </div>
+        </div>
+    </div>c Monitor và đồng bộ Version.</li>
                         </ul>
                     </div>
                     <div class="changelog-item">
