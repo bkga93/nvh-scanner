@@ -1,3 +1,16 @@
+// --- GHI NHỚ ĐĂNG NHẬP (DỰ PHÒNG CHO IPHONE) ---
+function setCookie(name, value, days) {
+    const expires = new Date(Date.now() + days * 864e5).toUTCString();
+    document.cookie = name + '=' + encodeURIComponent(value) + '; expires=' + expires + '; path=/; SameSite=Lax';
+}
+
+function getCookie(name) {
+    return document.cookie.split('; ').reduce((r, v) => {
+        const parts = v.split('=');
+        return parts[0] === name ? decodeURIComponent(parts[1]) : r;
+    }, '');
+}
+
 // Cấu hình URL Google Apps Script chính thức từ bạn
 const APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzw4v799F8zAANRMCfTDXG3O0HbDHoP9PvnDkjgZQGzaqpDlRnakOWpJocYROR8AzqqNg/exec";
 
@@ -36,7 +49,6 @@ let uploadQueue = []; // Hàng đợi tải video lên Drive
 let lastScannedId = null; // Lưu ID cuối cùng để ghi hình thủ công
 let autoRecordEnabled = localStorage.getItem('nvh_auto_record') !== 'false';
 
-// Cấu hình âm thanh & rung
 let audioCtx;
 const SOUND_PRESETS = {
     standard: { freq: 1200, type: 'sine', duration: 0.1, gain: 1.0 },
@@ -448,7 +460,7 @@ async function searchRemoteSheets(query) {
 }
 
 async function fetchDataFromSheets(isAuto = false) {
-    const btn = document.querySelector('.refresh-btn');
+    const btn = document.querySelector('.refresh-btn-inline');
     if (btn) btn.classList.add('refreshing');
     try {
         const response = await fetch(APP_SCRIPT_URL, {
@@ -459,14 +471,23 @@ async function fetchDataFromSheets(isAuto = false) {
         const data = await response.json();
         remoteDataCache = data;
         localStorage.setItem('nvh_remote_cache', JSON.stringify(data));
-        localStorage.setItem('nvh_last_update', new Date().toLocaleString('vi-VN'));
+        const now = new Date().toLocaleString('vi-VN');
+        localStorage.setItem('nvh_last_update', now);
+        
+        updateLastUpdateTimeDisplay(now);
         displayRemoteData();
+        
         if (!isAuto) showToast("Đã cập nhật dữ liệu!");
     } catch (error) {
         if (!isAuto) showToast("Lỗi cập nhật!");
     } finally {
         if (btn) btn.classList.remove('refreshing');
     }
+}
+
+function updateLastUpdateTimeDisplay(time) {
+    const display = document.getElementById('last-update-display');
+    if (display) display.innerText = "Cập nhật lúc: " + (time || "Chưa rõ");
 }
 
 function displayRemoteData(dataToDisplay = null) {
@@ -580,11 +601,17 @@ function showToast(msg) {
 
 // --- LOGIC BẢO MẬT MÃ PIN ---
 function checkSecurity() {
-    const isVerified = localStorage.getItem('nvh_verified') === 'true';
+    const isVerifiedLocal = localStorage.getItem('nvh_verified') === 'true';
+    const isVerifiedCookie = getCookie('nvh_verified') === 'true';
+    const isVerified = isVerifiedLocal || isVerifiedCookie;
+
     const modal = document.getElementById('passcode-modal');
     if (isVerified) {
         if (modal) modal.style.display = 'none';
-        console.log("Xác thực: Đã bỏ qua (Đã xác minh trước đó)");
+        console.log("Xác thực: Đã thông qua.");
+        // Đồng bộ lại nếu một trong hai bị mất
+        if (!isVerifiedLocal) localStorage.setItem('nvh_verified', 'true');
+        if (!isVerifiedCookie) setCookie('nvh_verified', 'true', 365);
     } else {
         if (modal) {
             modal.style.display = 'flex';
@@ -599,6 +626,7 @@ function validatePasscode() {
     const errorEl = document.getElementById('passcode-error');
     if (input === '310824') {
         localStorage.setItem('nvh_verified', 'true');
+        setCookie('nvh_verified', 'true', 365); // Lưu cookie 1 năm
         document.getElementById('passcode-modal').style.display = 'none';
         showToast("Xác thực thành công!");
         // Khởi tạo mặc định sau xác thực
@@ -735,6 +763,10 @@ window.onload = () => {
     loadLocalHistory();
     const cache = localStorage.getItem('nvh_remote_cache');
     if (cache) { remoteDataCache = JSON.parse(cache); displayRemoteData(); }
+    
+    const lastUpdate = localStorage.getItem('nvh_last_update');
+    updateLastUpdateTimeDisplay(lastUpdate);
+
     fetchDataFromSheets(true);
     setTimeout(processSyncQueue, 2000);
     setInterval(updateUploadIndicator, 3000);
@@ -998,15 +1030,19 @@ function updateUploadIndicator() {
 
 // --- LOGIC GỢI Ý TAB XEM LẠI ---
 let selectedReviewItem = null;
-function filterReviewData() {
-    const query = document.getElementById('review-order-id').value.toLowerCase().trim();
+let reviewSearchTimeout;
+function filterReviewData(immediate = false) {
+    const input = document.getElementById('review-order-id');
+    if (!input) return;
+    const query = input.value.toLowerCase().trim();
     const list = document.getElementById('review-data-list');
     
-    if (query.length < 3) {
+    if (query.length < 3 && !immediate) {
         list.style.display = 'none';
         return;
     }
 
+    // 1. Phản hồi nhanh từ bộ nhớ đệm
     const filtered = remoteDataCache.filter(item => 
         (item.content && item.content.toLowerCase().includes(query)) || 
         (item.orderId && item.orderId.toLowerCase().includes(query))
@@ -1024,7 +1060,48 @@ function filterReviewData() {
             </div>
         `).join('');
     } else {
-        list.innerHTML = "<p class='empty-msg'>Không tìm thấy mã đơn này.</p>";
+        list.style.display = 'block';
+        list.innerHTML = "<p class='empty-msg'>Đang tìm trên hệ thống...</p>";
+    }
+
+    // 2. Tìm kiếm trên Cloud (Sheets)
+    clearTimeout(reviewSearchTimeout);
+    if (query.length >= 2 || immediate) {
+        reviewSearchTimeout = setTimeout(async () => {
+            try {
+                const response = await fetch(APP_SCRIPT_URL, {
+                    method: "POST",
+                    body: JSON.stringify({ action: "SEARCH", query: query }),
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                });
+                const data = await response.json();
+                
+                // Cập nhật bộ nhớ đệm review
+                if (data && data.length > 0) {
+                    data.forEach(newItem => {
+                        const idx = remoteDataCache.findIndex(old => old.orderId === newItem.orderId);
+                        if (idx === -1) remoteDataCache.unshift(newItem);
+                    });
+                }
+                
+                const currentQuery = document.getElementById('review-order-id').value.trim().toLowerCase();
+                if (currentQuery === query) {
+                    if (data.length > 0) {
+                        list.innerHTML = data.slice(0, 10).map(item => `
+                            <div class="history-item" onclick='selectReviewItem(${JSON.stringify(item).replace(/'/g, "&apos;")})'>
+                                <div class="history-item-header">
+                                    <strong>${item.content || item.orderId}</strong>
+                                    <span class="history-item-time">${item.scanTime}</span>
+                                </div>
+                                <div class="history-item-content" style="font-size: 0.7rem; opacity: 0.6;">ID: ${item.orderId}</div>
+                            </div>
+                        `).join('');
+                    } else if (filtered.length === 0) {
+                        list.innerHTML = "<p class='empty-msg'>Không tìm thấy trên hệ thống.</p>";
+                    }
+                }
+            } catch (e) { console.error("Cloud search error:", e); }
+        }, immediate ? 0 : 800);
     }
 }
 

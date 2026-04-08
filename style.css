@@ -212,20 +212,24 @@ body {
     filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.4));
 }
 
-.tl { top: 2.5%; left: 2.5%; border-right: none; border-bottom: none; border-radius: 12px 0 0 0; }
-.tr { top: 2.5%; right: 2.5%; border-left: none; border-bottom: none; border-radius: 0 12px 0 0; }
-.bl { bottom: 2.5%; left: 2.5%; border-right: none; border-top: none; border-radius: 0 0 0 12px; }
-.br { bottom: 2.5%; right: 2.5%; border-left: none; border-top: none; border-radius: 0 0 12px 0; }
+/* Phóng to và căn sát các góc quét 1:1 lồng vào khung vàng 95% */
+/* Phóng to và căn sát các góc quét 1:1 lồng vào khung vàng 95% */
+.tl { top: 0; left: 0; border-right: none; border-bottom: none; border-radius: 20px 0 0 0; }
+.tr { top: 0; right: 0; border-left: none; border-bottom: none; border-radius: 0 20px 0 0; }
+.bl { bottom: 0; left: 0; border-right: none; border-top: none; border-radius: 0 0 0 20px; }
+.br { bottom: 0; right: 0; border-left: none; border-top: none; border-radius: 0 0 20px 0; }
 
-/* Ẩn triệt để các thành phần tự vẽ của thư viện html5-qrcode */
+/* Ẩn triệt để các thành phần tự vẽ của thư viện html5-qrcode để tránh lồng khung */
 #reader__scan_region {
     border: none !important;
+    background: none !important;
 }
 #reader__scan_region canvas {
-    display: none !important; /* Ẩn cái khung rác của thư viện */
+    display: none !important;
 }
 #reader video {
     border-radius: 20px;
+    object-fit: cover !important;
 }
 #reader img {
     display: none !important;
@@ -623,45 +627,42 @@ body {
     cursor: pointer;
 }
 
-/* --- DETAIL PANEL STYLES v1.6.6 --- */
-.detail-panel {
-    background-color: rgba(255, 255, 255, 0.03);
-    border: 1px dashed rgba(255, 215, 0, 0.3);
-    border-radius: 18px;
-    padding: 20px;
-}
-
-.detail-title {
-    font-size: 0.7rem;
-    color: var(--primary-color);
-    letter-spacing: 2px;
-    margin-bottom: 10px;
-    text-transform: uppercase;
-}
-
-.detail-row {
+/* Nâng cấp chi tiết đơn hàng: Thời gian lên đầu và to nổi bật */
+.main-time-row {
+    background-color: rgba(255, 215, 0, 0.05);
+    padding: 15px !important;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    border-bottom: 2px solid var(--primary-color) !important;
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    padding: 10px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    font-size: 0.9rem;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
 }
 
-.detail-row span:first-child {
+.main-time-row .time-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
     color: var(--gray-text);
-    min-width: 100px;
+    opacity: 0.8;
 }
 
-.detail-content-box {
-    background-color: rgba(0, 0, 0, 0.3);
-    padding: 12px;
-    border-radius: 10px;
-    margin-top: 5px;
-    font-family: 'Inter', monospace;
-    font-size: 0.85rem;
-    color: var(--primary-color);
-    width: 100%;
+.highlight-time {
+    color: var(--primary-color) !important;
+    font-size: 1.5rem !important;
+    font-weight: 950 !important;
+    text-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+    letter-spacing: 1px;
+}
+
+.data-update-status {
+    font-size: 0.7rem;
+    color: var(--gray-text);
+    margin-bottom: 15px;
+    display: flex;
+    justify-content: flex-end;
+    opacity: 0.8;
 }
 
 /* Suggestion List (Small) */

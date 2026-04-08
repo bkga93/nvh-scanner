@@ -97,11 +97,20 @@
                                 <span>📷</span>
                             </button>
                         </div>
+                        <button class="refresh-btn-inline" onclick="fetchDataFromSheets()">
+                            <span>🔄</span>
+                        </button>
+                    </div>
+                    <div class="data-update-status">
+                        <span id="last-update-display">Cập nhật: Đang tải...</span>
                     </div>
                     <div id="remote-data-list" class="history-list"></div>
                     <div id="item-detail-panel" class="detail-panel" style="display: none;">
                         <h4 class="detail-title">THÔNG TIN CHI TIẾT</h4>
-                        <div class="detail-row highlight-row"><span>Thời gian quét:</span> <span id="detail-time" class="highlight-time">...</span></div>
+                        <div class="detail-row highlight-row main-time-row">
+                            <div class="time-label">THỜI GIAN QUÉT</div>
+                            <div id="detail-time" class="highlight-time">...</div>
+                        </div>
                         <div class="detail-row">
                             <span>Mã đơn hàng:</span> 
                             <div class="id-copy-group">
@@ -109,7 +118,10 @@
                                 <button class="copy-btn" onclick="copyOrderCode()">📋</button>
                             </div>
                         </div>
-                        <div class="detail-row" style="opacity: 0.6; font-size: 0.75rem;"><span>ID hệ thống:</span> <span id="detail-id">...</span></div>
+                        <div class="detail-row" style="opacity: 0.6; font-size: 0.75rem;">
+                            <span>ID hệ thống:</span> 
+                            <span id="detail-id">...</span>
+                        </div>
                     </div>
                 </section>
 
@@ -143,8 +155,8 @@
                         
                         <div class="search-container">
                              <div class="search-box">
-                                <input type="text" id="review-order-id" placeholder="Tìm mã đơn..." onkeyup="filterReviewData()">
-                                <button class="search-scan-btn" onclick="lookupAndPlayVideo()">
+                                <input type="text" id="review-order-id" placeholder="Tìm mã trên Hệ thống..." onkeyup="filterReviewData()">
+                                <button class="search-scan-btn" onclick="filterReviewData(true)">
                                     <span>🔍</span>
                                 </button>
                             </div>
@@ -204,7 +216,7 @@
         </div>
 
         <footer class="footer">
-            <span class="copyright">Thực hiện bởi <i>NVH</i> — Version 1.8.0</span>
+            <span class="copyright">Thực hiện bởi <i>NVH</i> — Version 1.8.1</span>
         </footer>
     </div>
 
@@ -251,7 +263,7 @@
         </div>
 
         <div class="drawer-footer">
-            <div class="version-info">NVH Scanner Pro — v1.8.0</div>
+            <div class="version-info">NVH Scanner Pro — v1.8.1</div>
         </div>
     </div>
 
@@ -352,6 +364,15 @@
         <div id="tmpl-changelog">
             <div class="changelog-container">
                 <div class="changelog-list">
+                    <div class="changelog-item">
+                        <span class="ver-tag">v1.8.1</span>
+                        <ul>
+                            <li><b>Bảo mật:</b> Củng cố cơ chế ghi nhớ đăng nhập bằng Cookie dự phòng, khắc phục triệt để lỗi hỏi mật khẩu trên iPhone.</li>
+                            <li><b>Máy quét:</b> Loại bỏ khung quét phụ, tập trung vào khung vuông 1:1 to sát viền 95% diện tích màn hình.</li>
+                            <li><b>Dữ liệu:</b> Thêm thời gian cập nhật nội bộ và nút làm mới dữ liệu thủ công.</li>
+                            <li><b>Xem lại:</b> Nâng cấp tính năng tìm kiếm đơn hàng sang chế độ tìm kiếm Hệ thống (Cloud).</li>
+                        </ul>
+                    </div>
                     <div class="changelog-item">
                         <span class="ver-tag">v1.8.0</span>
                         <ul>
