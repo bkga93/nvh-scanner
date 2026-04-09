@@ -666,7 +666,7 @@ async function searchRemoteSheets(query) {
 async function fetchDataFromSheets(isAuto = false) {
     const btn = document.querySelector('.download-btn-main');
     if (btn) btn.classList.add('refreshing');
-    if (!isAuto) showToast("Đang nén và tải dữ liệu từ hệ thống...");
+    if (!isAuto) showToast("Đang tải dữ liệu từ hệ thống...", -1); // -1 để giữ thông báo cho đến khi xong
     
     try {
         const response = await fetch(APP_SCRIPT_URL, {
@@ -735,10 +735,20 @@ async function fetchDataFromSheets(isAuto = false) {
         updateLastUpdateTimeDisplay(now);
         displayRemoteData();
         
-        if (!isAuto) showToast(`✅ Đã tải ${data.length} đơn hàng trong 30 ngày qua!`);
+        if (!isAuto) {
+            hideToast(); // Ẩn thông báo "Đang tải" trước khi hiện kết quả
+            if (data.length > 0) {
+                showToast(`✅ Đã tải ${data.length} đơn hàng trong 30 ngày qua!`);
+            } else {
+                showToast(`⚠️ Không có đơn hàng nào trong 30 ngày qua.`);
+            }
+        }
     } catch (error) {
         console.error("Fetch error:", error);
-        if (!isAuto) showToast("❌ Lỗi tải dữ liệu. Vui lòng thử lại!");
+        if (!isAuto) {
+            hideToast();
+            showToast("❌ Lỗi tải dữ liệu. Vui lòng thử lại!");
+        }
     } finally {
         if (btn) btn.classList.remove('refreshing');
     }
@@ -924,15 +934,34 @@ function clearLocalHistory() {
     }
 }
 
-function showToast(msg) {
+let toastTimeout = null;
+function showToast(msg, duration = 2500) {
     const toast = document.getElementById('toast');
+    if (!toast) return;
+
     toast.innerText = msg;
     toast.classList.add('show');
     toast.style.transform = "translateX(-50%) translateY(0)";
+    
+    // Clear timeout cũ nếu có
+    if (toastTimeout) clearTimeout(toastTimeout);
+
+    // Nếu duration là -1 thì không tự động đóng
+    if (duration !== -1) {
+        toastTimeout = setTimeout(() => {
+            hideToast();
+        }, duration);
+    }
+}
+
+function hideToast() {
+    const toast = document.getElementById('toast');
+    if (!toast) return;
+
+    toast.style.transform = "translateX(-50%) translateY(100px)";
     setTimeout(() => {
-        toast.style.transform = "translateX(-50%) translateY(100px)";
-        setTimeout(() => toast.classList.remove('show'), 400);
-    }, 2500);
+        toast.classList.remove('show');
+    }, 400);
 }
 
 // --- HỆ THỐNG KÍCH HOẠT DIAMOND v2.0.0 ---

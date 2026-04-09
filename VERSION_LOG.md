@@ -2,7 +2,15 @@
 
 ---
 
-## [V1.1.4 Beta] - 04/2026 (Hiện tại)
+## [V1.1.5 Beta] - 04/2026 (Hiện tại)
+- **Cải tiến UX**:
+    - **Persistent Toast**: Thông báo "Đang tải dữ liệu..." sẽ hiển thị liên tục cho đến khi nhận được phản hồi từ server, không bị tự động ẩn sau 2.5 giây như trước.
+    - Bổ sung hàm `hideToast()` để đóng thông báo thủ công sau khi hoàn tất.
+- **Trạng thái**: Trải nghiệm đồng bộ mượt mà hơn trên mạng chậm.
+
+---
+
+## [V1.1.4 Beta] - 04/2026
 - **Sửa lỗi nghiêm trọng**:
     - **Data Normalization**: Sửa lỗi "0 đơn hàng" khi Sheets trả về dữ liệu dạng mảng (getValues()) thay vì Object. App tự động map Cột A=Time, B=ID, C=Content.
     - **Date Parsing**: Hỗ trợ dấu gạch ngang `-` (ví dụ: `09-04-2026`) thường xuất hiện trên một số dòng của người dùng.
