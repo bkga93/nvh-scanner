@@ -165,9 +165,10 @@ function switchTab(tab) {
 
 // Bật/Tắt Camera
 async function toggleScanner() {
-    const btn = document.getElementById('pc-scan-btn') || document.getElementById('start-btn');
-    const mainText = btn?.querySelector('.btn-main-text') || document.getElementById('btn-text');
-    const subText = btn?.querySelector('.btn-sub-text') || document.getElementById('btn-subtext');
+    const activeBtnId = pcMode ? 'pc-scan-btn' : 'start-btn';
+    const btn = document.getElementById(activeBtnId) || document.getElementById('start-btn');
+    const mainText = btn?.querySelector('.btn-main-text');
+    const subText = btn?.querySelector('.btn-sub-text');
 
     if (!isScanning) {
         try {
@@ -183,13 +184,7 @@ async function toggleScanner() {
             playBeep();
             await html5QrCode.start(
                 cameraConfig,
-                { 
-                    fps: 15,
-                    showViewFinder: false,
-                    experimentalFeatures: {
-                        useBarCodeDetectorIfSupported: true
-                    }
-                },
+                { fps: 15 },
                 onScanSuccess
             );
 
@@ -248,8 +243,9 @@ async function stopScanner() {
         if (isScanning) await html5QrCode.stop();
         isScanning = false;
         
-        const btn = document.getElementById('pc-scan-btn') || document.getElementById('start-btn');
-        const mainText = btn?.querySelector('.btn-main-text') || document.getElementById('btn-text');
+        const activeBtnId = pcMode ? 'pc-scan-btn' : 'start-btn';
+        const btn = document.getElementById(activeBtnId) || document.getElementById('start-btn');
+        const mainText = btn?.querySelector('.btn-main-text');
         
         if (btn) btn.classList.remove('scanning', 'active');
         if (mainText) mainText.innerText = "BẮT ĐẦU QUÉT";
@@ -1485,8 +1481,9 @@ async function stopScanner() {
         if (isScanning) await html5QrCode.stop();
         isScanning = false;
         
-        const btn = document.getElementById('pc-scan-btn') || document.getElementById('start-btn');
-        const mainText = btn?.querySelector('.btn-main-text') || document.getElementById('btn-text');
+        const activeBtnId = pcMode ? 'pc-scan-btn' : 'start-btn';
+        const btn = document.getElementById(activeBtnId) || document.getElementById('start-btn');
+        const mainText = btn?.querySelector('.btn-main-text');
         
         if (btn) btn.classList.remove('scanning', 'active');
         if (mainText) mainText.innerText = "BẮT ĐẦU QUÉT";
