@@ -319,6 +319,30 @@ body {
     gap: 10px;
 }
 
+.action-group-inline {
+    display: flex;
+    gap: 8px;
+}
+
+.view-all-btn {
+    background: rgba(255, 215, 0, 0.1);
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+    padding: 0 15px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s;
+    height: 50px;
+    white-space: nowrap;
+}
+
+.view-all-btn:active {
+    background: var(--primary-color);
+    color: var(--surface-color);
+}
+
 .search-box {
     display: flex;
     flex: 1;

@@ -4,6 +4,17 @@ Tất cả các thay đổi quan trọng đối với dự án **TCT Scanner Pro
 
 ---
 
+## [1.1.0 Beta] - 2026-04-09
+### Added
+- **Gợi ý tìm kiếm tức thì (Instant Suggestion):** Hiển thị kết quả từ bộ nhớ máy ngay lập tức khi gõ phím.
+- **Đồng bộ dữ liệu thông minh:** Tự động lọc dữ liệu trong vòng 30 ngày và loại bỏ mã trùng lặp khi cập nhật.
+- **Chuẩn hóa thời gian:** Đồng bộ định dạng `DD/MM/YYYY HH:mm:ss` (Ngày/Tháng/Năm Giờ:Phút:Giây) cho toàn bộ ứng dụng.
+### Changed
+- **Giao diện:** Tự động ẩn danh sách tìm kiếm khi ô nhập trống để tối ưu diện tích hiển thị.
+- **Nâng cấp phiên bản:** Cập nhật đồng bộ Version V1.1.0 Beta trên toàn giao diện App.
+
+---
+
 ## [2.3.2] - 2026-04-09
 ### Added
 - Tạo file `CHANGELOG.md` chính thức để theo dõi lịch sử cập nhật.

@@ -567,7 +567,14 @@ function filterRemoteData(immediate = false) {
     if (!input) return;
     const query = input.value.trim().toLowerCase();
     
-    // Hiển thị kết quả từ cache cục bộ NGAY LẬP TỨC
+    // Yêu cầu v1.1.2: Chỉ tìm kiếm/gợi ý khi từ 3 ký tự trở lên
+    if (query.length > 0 && query.length < 3) {
+        displayRemoteData(); 
+        clearTimeout(searchTimeout);
+        return;
+    }
+
+    // Hiển thị kết quả từ cache cục bộ NGAY LẬP TỨC (Không dùng debounce cho cache)
     displayRemoteData();
 
     clearTimeout(searchTimeout);
@@ -575,8 +582,15 @@ function filterRemoteData(immediate = false) {
 
     // Chỉ tìm trên server nếu từ khóa >= 3 ký tự hoặc yêu cầu ngay
     if (query.length >= 3 || immediate) {
-        searchTimeout = setTimeout(() => searchRemoteSheets(query), immediate ? 0 : 1000);
+        searchTimeout = setTimeout(() => searchRemoteSheets(query), immediate ? 0 : 800);
     }
+}
+
+function showAllRemoteData() {
+    const input = document.getElementById('remote-search-input');
+    if (input) input.value = ""; // Xóa query để hiện tất cả
+    displayRemoteData(remoteDataCache);
+    showToast(`Đang hiển thị toàn bộ ${remoteDataCache.length} đơn hàng`);
 }
 
 async function searchRemoteSheets(query) {
@@ -677,24 +691,35 @@ function displayRemoteData(dataToDisplay = null) {
     const input = document.getElementById('remote-search-input');
     const query = input ? input.value.trim().toLowerCase() : "";
     
-    // Yêu cầu: Chưa gõ thì không hiện danh sách
+    // Yêu cầu v1.1.2: Nếu đang gõ mà chưa đủ 3 ký tự
+    if (query.length > 0 && query.length < 3 && !dataToDisplay) {
+        list.innerHTML = "<p class='empty-msg text-warning'>Vui lòng nhập ít nhất 3 ký tự để bắt đầu gợi ý.</p>";
+        list.style.display = 'block';
+        return;
+    }
+
+    // Nếu có dataToDisplay (như khi bấm Xem tất cả), ưu tiên dùng nó
+    const data = dataToDisplay || (query.length >= 3 ? remoteDataCache.filter(item => 
+        (item.content && item.content.toLowerCase().includes(query)) || 
+        (item.orderId && item.orderId.toLowerCase().includes(query))
+    ) : []);
+
+    // Yêu cầu: Chưa gõ thì không hiện danh sách (trừ khi dùng dataToDisplay trực tiếp)
     if (!query && !dataToDisplay) {
         list.innerHTML = "<p class='empty-msg'>Vui lòng nhập mã để tìm kiếm.</p>";
         list.style.display = 'block';
         return;
     }
 
-    const data = dataToDisplay || (query ? remoteDataCache.filter(item => 
-        (item.content && item.content.toLowerCase().includes(query)) || 
-        (item.orderId && item.orderId.toLowerCase().includes(query))
-    ) : []);
-
     if (data.length === 0) {
-        list.innerHTML = `<p class='empty-msg'>${query ? 'Không tìm thấy dữ liệu.' : 'Bắt đầu gõ để tìm gợi ý...'}</p>`;
+        list.innerHTML = `<p class='empty-msg'>${query ? 'Không tìm thấy dữ liệu.' : 'Chưa có dữ liệu trong máy...'}</p>`;
         return;
     }
 
-    list.innerHTML = data.slice(0, 50).map(item => `
+    // Tối ưu render: Dùng DocumentFragment hoặc tạo chuỗi một lần
+    // Tăng giới hạn hiển thị lên 100 để "Xem tất cả" có ý nghĩa hơn
+    const limit = dataToDisplay ? 200 : 100;
+    const htmlLines = data.slice(0, limit).map(item => `
         <div class="history-item ${selectedRemoteItem && selectedRemoteItem.orderId === item.orderId ? 'selected' : ''}" 
              onclick='selectRemoteItem(${JSON.stringify(item).replace(/'/g, "&apos;")})'>
             <div class="history-item-header">
@@ -703,7 +728,9 @@ function displayRemoteData(dataToDisplay = null) {
             </div>
             <div class="history-item-content">${item.content}</div>
         </div>
-    `).join('');
+    `);
+    
+    list.innerHTML = htmlLines.join('');
 }
 
 
@@ -1242,6 +1269,12 @@ function filterReviewData(immediate = false) {
     
     if (!query) {
         list.style.display = 'none';
+        return;
+    }
+
+    if (query.length < 3 && !immediate) {
+        list.style.display = 'block';
+        list.innerHTML = "<p class='empty-msg text-warning'>Nhập ít nhất 3 ký tự...</p>";
         return;
     }
 
