@@ -634,27 +634,17 @@ function updateLastUpdateTimeDisplay(time) {
 
 function displayRemoteData(dataToDisplay = null) {
     const list = document.getElementById('remote-data-list');
-    const input = document.getElementById('remote-search-input');
-    const query = input ? input.value.trim().toLowerCase() : "";
+    const data = dataToDisplay || remoteDataCache;
     
-    // Nếu có dữ liệu truyền vào (đã lọc), dùng nó. Nếu không, dùng cache gốc.
-    let data = dataToDisplay || remoteDataCache;
-
-    // QUAN TRỌNG: Nếu có query mà data chưa được lọc, ta phải lọc lại
-    if (query && !dataToDisplay) {
-        data = data.filter(item => 
-            (item.content && item.content.toLowerCase().includes(query)) || 
-            (item.orderId && item.orderId.toLowerCase().includes(query))
-        );
-    }
+    const query = document.getElementById('remote-search-input') ? document.getElementById('remote-search-input').value.trim() : "";
     
-    if (query.length < 3 && !dataToDisplay) {
-        list.innerHTML = "<p class='empty-msg'>Vui lòng nhập ít nhất 3 ký tự để tìm kiếm.</p>";
+    if (!query && !dataToDisplay) {
+        list.innerHTML = "<p class='empty-msg'>Vui lòng nhập mã để tìm kiếm.</p>";
         return;
     }
 
     if (!data || data.length === 0) {
-        list.innerHTML = "<p class='empty-msg'>Không tìm thấy dữ liệu phù hợp.</p>";
+        list.innerHTML = "<p class='empty-msg'>Không tìm thấy dữ liệu.</p>";
         return;
     }
 
@@ -662,13 +652,14 @@ function displayRemoteData(dataToDisplay = null) {
         <div class="history-item ${selectedRemoteItem && selectedRemoteItem.orderId === item.orderId ? 'selected' : ''}" 
              onclick='selectRemoteItem(${JSON.stringify(item).replace(/'/g, "&apos;")})'>
             <div class="history-item-header">
-                <strong>${item.content || item.orderId || 'N/A'}</strong>
-                <span class="history-item-time suggest-time">${item.scanTime}</span>
+                <strong>ID: ${item.orderId || 'N/A'}</strong>
+                <span class="history-item-time">${item.scanTime}</span>
             </div>
-            <div class="history-item-content" style="font-size: 0.75rem; opacity: 0.7;">ID: ${item.orderId}</div>
+            <div class="history-item-content">${item.content}</div>
         </div>
     `).join('');
 }
+
 
 function selectRemoteItem(item) {
     selectedRemoteItem = item;
