@@ -184,14 +184,11 @@ async function toggleScanner() {
             await html5QrCode.start(
                 cameraConfig,
                 { 
-                    fps: 25, 
-                    qrbox: (viewfinderWidth, viewfinderHeight) => {
-                        const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
-                        const qrboxSize = Math.floor(minEdge * 0.8);
-                        return { width: qrboxSize, height: qrboxSize };
-                    },
-                    aspectRatio: 1.0,
-                    showViewFinder: false 
+                    fps: 15,
+                    showViewFinder: false,
+                    experimentalFeatures: {
+                        useBarCodeDetectorIfSupported: true
+                    }
                 },
                 onScanSuccess
             );
@@ -246,23 +243,35 @@ async function startSecondaryCamera() {
 }
 
 async function stopScanner() {
-    if (html5QrCode && isScanning) {
-        await html5QrCode.stop();
-        if (camera2) {
-            camera2.getTracks().forEach(track => track.stop());
-            camera2 = null;
-        }
+    if (!html5QrCode) return;
+    try {
+        if (isScanning) await html5QrCode.stop();
         isScanning = false;
-        const btn = document.getElementById('start-btn');
-        btn.classList.remove('scanning');
-        document.getElementById('btn-text').innerText = "BẮT ĐẦU QUÉT";
-        document.getElementById('btn-subtext').innerText = "Nhấn để khởi động Camera";
         
-        // Clear monitor videos
-        document.getElementById('pc-video-1').srcObject = null;
-        document.getElementById('pc-video-2').srcObject = null;
-        document.getElementById('monitor-cam-1').style.display = 'block';
-        document.getElementById('monitor-cam-2').style.display = 'block';
+        const btn = document.getElementById('pc-scan-btn') || document.getElementById('start-btn');
+        const mainText = btn?.querySelector('.btn-main-text') || document.getElementById('btn-text');
+        
+        if (btn) btn.classList.remove('scanning', 'active');
+        if (mainText) mainText.innerText = "BẮT ĐẦU QUÉT";
+        
+        // Dừng các luồng giám sát
+        recorderStreams.forEach(s => {
+            if (s) s.getTracks().forEach(t => t.stop());
+        });
+        recorderStreams = [];
+        
+        const m1 = document.getElementById('monitor-cam-1');
+        const m2 = document.getElementById('monitor-cam-2');
+        if (m1) m1.style.display = 'flex';
+        if (m2) m2.style.display = 'flex';
+        
+        const v1 = document.getElementById('pc-video-1');
+        const v2 = document.getElementById('pc-video-2');
+        if (v1) v1.srcObject = null;
+        if (v2) v2.srcObject = null;
+    } catch (err) { 
+        console.warn("Stop error:", err); 
+        isScanning = false;
     }
 }
 
@@ -814,32 +823,27 @@ function isMobileDevice() {
     return (window.innerWidth <= 800) || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 }
 
-function togglePCMode() {
-    const toggle = document.getElementById('pc-mode-toggle');
-    
-    if (toggle.checked && isMobileDevice()) {
-        showToast("⚠️ Chế độ PC không hỗ trợ trên điện thoại.");
-        toggle.checked = false;
-        return;
-    }
-
-    pcMode = toggle.checked;
+function togglePCMode(forceState = null) {
+    pcMode = forceState !== null ? forceState : !pcMode;
     localStorage.setItem('nvh_pc_mode', pcMode);
     
-    const container = document.getElementById('app-container');
-    const monitor = document.getElementById('pc-monitor');
-    const cam2Group = document.getElementById('pc-camera-2-group');
+    const body = document.body;
+    const reader = document.getElementById('reader');
+    const pcReaderContainer = document.getElementById('pc-reader-container');
+    const mobileReaderContainer = document.querySelector('#mobile-scan-ui .scanner-container');
 
     if (pcMode) {
-        container.classList.add('pc-layout');
-        monitor.style.display = 'flex';
-        cam2Group.style.display = 'block';
-        updateCameraList(); 
+        body.classList.add('pc-mode');
+        // Di chuyển reader vào cột trái PC
+        if (reader && pcReaderContainer) pcReaderContainer.appendChild(reader);
+        showToast("🖥️ Đã kích hoạt Giao diện PC Pro");
+        startDualMonitoring(); 
     } else {
-        container.classList.remove('pc-layout');
-        monitor.style.display = 'none';
-        cam2Group.style.display = 'none';
-        if (isScanning) stopScanner();
+        body.classList.remove('pc-mode');
+        // Trả reader về giao diện mobile
+        if (reader && mobileReaderContainer) mobileReaderContainer.appendChild(reader);
+        showToast("📱 Đã chuyển sang giao diện Mobile");
+        stopScanner();
     }
 }
 

@@ -50,7 +50,7 @@
                         </div>
 
                         <div class="controls-container">
-                            <button class="pc-action-btn" onclick="toggleScanner()">
+                            <button id="start-btn" class="pc-action-btn" onclick="toggleScanner()">
                                 <span class="btn-main-text">BẮT ĐẦU QUÉT</span>
                                 <span class="btn-sub-text">Nhấn để kích hoạt Camera</span>
                             </button>
@@ -75,7 +75,7 @@
                                     <div id="pc-pro-last-scanned" class="status-value" style="font-size: 1.8rem;">Đang chờ...</div>
                                     <div id="pc-pro-status-msg" class="status-hint">Sẵn sàng</div>
                                 </div>
-                                <button class="pc-action-btn" onclick="toggleScanner()">
+                                <button id="pc-scan-btn" class="pc-action-btn" onclick="toggleScanner()">
                                     <span class="btn-main-text">BẮT ĐẦU QUÉT</span>
                                 </button>
 
@@ -275,7 +275,7 @@
         </div>
 
         <footer class="footer">
-            <span class="copyright">Thực hiện bởi <i>NVH</i> — Version 2.1.1 [Diamond Edition Patch]</span>
+            <span class="copyright">Thực hiện bởi <i>NVH</i> — Version 2.1.2 [Diamond Edition Patch]</span>
         </footer>
     </div>
 
@@ -329,7 +329,7 @@
         </div>
 
         <div class="drawer-footer">
-            <div class="version-info">NVH Scanner Pro — v2.1.1</div>
+            <div class="version-info">NVH Scanner Pro — v2.1.2</div>
         </div>
     </div>
 
@@ -444,6 +444,13 @@
         <div id="tmpl-changelog">
             <div class="changelog-container">
                 <div class="changelog-list">
+                    <div class="changelog-item">
+                        <span class="ver-tag">v2.1.2</span>
+                        <ul>
+                            <li><b>Máy quét (Sửa lỗi):</b> Khắc phục triệt để lỗi treo giao diện "Bật camera nhưng không quét" do tham số cấu hình lỗi thời.</li>
+                            <li><b>Hệ thống:</b> Tối ưu hóa tốc độ nhận diện mã vạch toàn vùng trên cả Mobile và PC.</li>
+                        </ul>
+                    </div>
                     <div class="changelog-item">
                         <span class="ver-tag">v2.1.0</span>
                         <ul>
@@ -606,7 +613,7 @@
             </div>
             <button class="btn-activate-gold" onclick="activateApp()">KÍCH HOẠT DIAMOND EDITION</button>
             <p id="activation-error" class="gold-error" style="display: none;">Key kích hoạt không chính xác!</p>
-            <div class="activation-footer-gold">TCT Scanner Pro — Version 2.1.1 [Diamond Edition Patch]</div>
+            <div class="activation-footer-gold">TCT Scanner Pro — Version 2.1.2 [Diamond Edition Patch]</div>
         </div>
     </div>
 
