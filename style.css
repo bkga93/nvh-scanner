@@ -1467,3 +1467,30 @@ body.pc-mode .activation-card { max-width: 450px; }
     opacity: 0 !important;
     pointer-events: none !important;
 }
+
+/* Info Box Gold for Guidance */
+.info-box-gold {
+    background: rgba(255, 215, 0, 0.05);
+    border: 1px dashed var(--primary-color);
+    border-radius: 12px;
+    padding: 15px;
+    margin-top: 20px;
+}
+
+.info-title {
+    color: var(--primary-color);
+    font-size: 0.75rem;
+    font-weight: 900;
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+}
+
+.info-desc {
+    font-size: 0.75rem;
+    color: var(--gray-text);
+    line-height: 1.5;
+}
+
+.info-desc b {
+    color: white;
+}

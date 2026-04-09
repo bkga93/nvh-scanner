@@ -277,7 +277,7 @@
         </div>
 
         <footer class="footer">
-            <span class="copyright">Thực hiện bởi <i>NVH</i> — Version 2.1.4 [Diamond Edition Patch]</span>
+            <span class="copyright">Thực hiện bởi <i>NVH</i> — Version 2.1.5 [Diamond Edition Patch]</span>
         </footer>
     </div>
 
@@ -331,7 +331,7 @@
         </div>
 
         <div class="drawer-footer">
-            <div class="version-info">NVH Scanner Pro — v2.1.4</div>
+            <div class="version-info">NVH Scanner Pro — v2.1.5</div>
         </div>
     </div>
 
@@ -439,6 +439,17 @@
                     <label style="font-size: 0.8rem;">3. Camera Góc 2 (Monitor)</label>
                     <select id="monitor2-cam-select-modal" class="settings-select" onchange="saveModalSettings()"></select>
                 </div>
+
+                <!-- HƯỚNG DẪN CAMERA IP CHO MAC -->
+                <div class="info-box-gold">
+                    <div class="info-title">💡 KẾT NỐI CAMERA IP (SMARTPSS) TRÊN MAC</div>
+                    <div class="info-desc">
+                        1. Cài đặt phần mềm <b>OBS Studio</b> trên MacOS.<br>
+                        2. Thêm nguồn "Window Capture" chọn cửa sổ SmartPSS.<br>
+                        3. Nhấn <b>"Start Virtual Camera"</b> trong OBS.<br>
+                        4. Quay lại đây nhấn "LÀM MỚI" và chọn <b>OBS Virtual Camera</b>.
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -446,6 +457,13 @@
         <div id="tmpl-changelog">
             <div class="changelog-container">
                 <div class="changelog-list">
+                    <div class="changelog-item">
+                        <span class="ver-tag">v2.1.5</span>
+                        <ul>
+                            <li><b>PC Mode (Nâng cấp):</b> Thêm hướng dẫn kết nối Camera IP qua Virtual Webcam cho MacOS.</li>
+                            <li><b>Hệ thống:</b> Tối ưu hóa việc nhận diện tên thiết bị Camera để dễ dàng phân biệt Camera ảo.</li>
+                        </ul>
+                    </div>
                     <div class="changelog-item">
                         <span class="ver-tag">v2.1.4</span>
                         <ul>
@@ -628,7 +646,7 @@
             </div>
             <button class="btn-activate-gold" onclick="activateApp()">KÍCH HOẠT DIAMOND EDITION</button>
             <p id="activation-error" class="gold-error" style="display: none;">Key kích hoạt không chính xác!</p>
-            <div class="activation-footer-gold">TCT Scanner Pro — Version 2.1.4 [Diamond Edition Patch]</div>
+            <div class="activation-footer-gold">TCT Scanner Pro — Version 2.1.5 [Diamond Edition Patch]</div>
         </div>
     </div>
 

@@ -1447,7 +1447,17 @@ async function updateCameraList(isModal = false) {
     if (!sScanner) return;
 
     try {
-        const devices = await Html5Qrcode.getCameras();
+        let devices = await Html5Qrcode.getCameras();
+        
+        // Tối ưu hóa: Nếu thư viện không trả về Label, thử dùng API gốc của trình duyệt
+        if (devices.some(d => !d.label || d.label.includes('Camera'))) {
+            const navDevices = await navigator.mediaDevices.enumerateDevices();
+            const videoDevices = navDevices.filter(d => d.kind === 'videoinput');
+            if (videoDevices.length > 0) {
+                devices = videoDevices.map(d => ({ id: d.deviceId, label: d.label }));
+            }
+        }
+
         if (devices && devices.length > 0) {
             const options = devices.map(d => `<option value="${d.id}">${d.label || 'Camera ' + d.id.substr(0,4)}</option>`).join('');
             sScanner.innerHTML = options;
@@ -1457,6 +1467,15 @@ async function updateCameraList(isModal = false) {
             sScanner.value = localStorage.getItem('nvh_scanner_cam_id') || localStorage.getItem('nvh_camera_id') || devices[0].id;
             sM1.value = localStorage.getItem('nvh_monitor1_cam_id') || devices[0].id;
             sM2.value = localStorage.getItem('nvh_monitor2_cam_id') || "";
+
+            // Đồng bộ giữa giao diện chính và Modal nếu cần
+            if (isModal) {
+                const mainScanner = document.getElementById('scanner-cam-select');
+                if (mainScanner) {
+                    mainScanner.innerHTML = options;
+                    mainScanner.value = sScanner.value;
+                }
+            }
         } else {
             const noCam = '<option value="">❌ Không tìm thấy thiết bị</option>';
             sScanner.innerHTML = noCam; sM1.innerHTML = noCam; sM2.innerHTML = noCam;
