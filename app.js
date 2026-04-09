@@ -51,6 +51,10 @@ let go2rtcSource = localStorage.getItem('nvh_go2rtc_source') || 'cam1';
 let useIPCamera = localStorage.getItem('nvh_use_ip_camera') === 'true';
 let pcGo2rtc = null; // RTCPeerConnection cho go2rtc
 
+// Tracking v2.3.0
+let activeSession = null; // { code, startTime, lastSeen, snapshot, id }
+let sessionTimeout = null;
+
 // --- BIẾN CỨU NGUY BẢO MẬT v1.8.7 (Anti-Loop Extreme) ---
 window.isVerifiedSession = false; 
 
@@ -357,11 +361,17 @@ function processValidScan(decodedText, action = 'APPEND') {
         const scanModeEl = document.querySelector('input[name="scanMode"]:checked');
         const scanMode = scanModeEl ? scanModeEl.value : 'single';
         
+        // Hỗ trợ tracking v2.3.0
+        const isTracking = arguments[2] === true;
+        const trackingData = arguments[3] || {};
+
         const orderData = {
-            id: Date.now(),
+            id: trackingData.id || Date.now(),
             orderId: decodedText.length > 5 ? decodedText : "NVH-" + Math.random().toString(36).substr(2, 6).toUpperCase(),
             content: decodedText,
-            scanTime: new Date().toLocaleString('vi-VN'),
+            scanTime: trackingData.startTime || new Date().toLocaleString('vi-VN'),
+            endTime: trackingData.endTime || '',
+            evidenceImage: trackingData.snapshot || '',
             synced: false,
             action: action 
         };
@@ -373,12 +383,11 @@ function processValidScan(decodedText, action = 'APPEND') {
         lastScannedId = orderData.orderId;
         updatePCDisplay(orderData.orderId);
 
-        if (pcMode && typeof isAutoRec !== 'undefined' && isAutoRec) {
+        if (pcMode && typeof isAutoRec !== 'undefined' && isAutoRec && !isTracking) {
             if (recordingActive) stopDualRecording();
             setTimeout(() => startDualRecording(orderData.orderId), 300);
         }
 
-        // Tích hợp Bảng Lịch sử Nhanh v2.1.0
         if (pcMode) updatePCRecentList(decodedText, 'success');
 
         if (scanMode === 'single' && !pcMode) setTimeout(() => stopScanner(), 500);
@@ -420,6 +429,19 @@ function handleDuplicateOption(option) {
 // --- LOGIC HÀNG ĐỢI ĐỒNG BỘ ---
 function saveToQueue(data) {
     let queue = JSON.parse(localStorage.getItem('nvh_scan_queue') || '[]');
+    
+    // Nếu là cập nhật trạng thái kết thúc v2.3.0
+    if (data.action === 'UPDATE_END') {
+        const index = queue.findIndex(item => item.orderId === data.orderId);
+        if (index !== -1) {
+            queue[index].endTime = data.endTime;
+            queue[index].synced = false; // Đánh dấu để đồng bộ lại
+            localStorage.setItem('nvh_scan_queue', JSON.stringify(queue));
+            loadLocalHistory();
+            return;
+        }
+    }
+    
     queue.unshift(data);
     localStorage.setItem('nvh_scan_queue', JSON.stringify(queue.slice(0, 500)));
     loadLocalHistory();
@@ -435,12 +457,14 @@ async function processSyncQueue() {
     isSyncing = true;
     const itemToSync = unsyncedItems[unsyncedItems.length - 1];
     
-    // Chuẩn bị dữ liệu gửi đi
+    // Chuẩn bị dữ liệu gửi đi v2.3.0
     const payload = {
         action: itemToSync.action || "APPEND",
         orderId: itemToSync.orderId,
         content: itemToSync.content,
-        scanTime: itemToSync.scanTime
+        scanTime: itemToSync.scanTime,
+        endTime: itemToSync.endTime || '',
+        image: itemToSync.evidenceImage ? "IMAGE_DATA" : '' // Không gửi Base64 trực tiếp vào Sheets để tránh lag
     };
 
     const success = await sendToGoogleSheets(payload);
@@ -571,7 +595,6 @@ function updateLastUpdateTimeDisplay(time) {
 function displayRemoteData(dataToDisplay = null) {
     const list = document.getElementById('remote-data-list');
     const data = dataToDisplay || remoteDataCache;
-    const lastUpdate = localStorage.getItem('nvh_last_update') || "Chưa rõ";
     
     const query = document.getElementById('remote-search-input') ? document.getElementById('remote-search-input').value.trim() : "";
     
@@ -1931,8 +1954,7 @@ function ipCameraScanLoop(video) {
 
     ipScanInterval = setInterval(() => {
         if (!isScanning || video.paused || video.ended) return;
-        if (isProcessing) return;
-
+        
         canvas.width = video.videoWidth || 640;
         canvas.height = video.videoHeight || 480;
         if (canvas.width === 0) return;
@@ -1944,9 +1966,63 @@ function ipCameraScanLoop(video) {
         });
 
         if (code && code.data) {
-            onScanSuccess(code.data);
+            handleTrackingScan(code.data, canvas);
+        } else {
+            checkSessionTimeout();
         }
-    }, 250); // Quét mỗi 250ms để tối ưu hiệu năng
+    }, 250); 
+}
+
+function handleTrackingScan(code, canvas) {
+    const now = Date.now();
+    
+    // Nếu là mã mới hoàn toàn
+    if (!activeSession || activeSession.code !== code) {
+        // Nếu đang có session cũ, chốt nó trước khi đổi sang mã mới
+        if (activeSession) finalizeSession();
+        
+        // Bắt đầu session mới
+        activeSession = {
+            code: code,
+            startTime: new Date().toLocaleString('vi-VN'),
+            lastSeen: now,
+            snapshot: canvas.toDataURL('image/jpeg', 0.5),
+            id: now
+        };
+        
+        playBeep();
+        processValidScan(code, 'START', true, activeSession);
+        showToast("📦 Phát hiện đơn: " + code);
+    } else {
+        // Cập nhật thời điểm thấy cuối cùng
+        activeSession.lastSeen = now;
+        if (sessionTimeout) {
+            clearTimeout(sessionTimeout);
+            sessionTimeout = null;
+        }
+    }
+}
+
+function checkSessionTimeout() {
+    if (activeSession && !sessionTimeout) {
+        sessionTimeout = setTimeout(() => {
+            finalizeSession();
+        }, 3000); // 3 giây không thấy mã thì coi như xong
+    }
+}
+
+function finalizeSession() {
+    if (!activeSession) return;
+    
+    activeSession.endTime = new Date().toLocaleString('vi-VN');
+    processValidScan(activeSession.code, 'UPDATE_END', true, activeSession);
+    showToast("✅ Hoàn thành đóng gói: " + activeSession.code);
+    
+    activeSession = null;
+    if (sessionTimeout) {
+        clearTimeout(sessionTimeout);
+        sessionTimeout = null;
+    }
 }
 
 function stopIPCameraScanner() {
