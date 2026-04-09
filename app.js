@@ -184,8 +184,12 @@ async function toggleScanner() {
             await html5QrCode.start(
                 cameraConfig,
                 { 
-                    fps: 20, 
-                    qrbox: undefined, // Ép quét toàn bộ diện tích Video (v1.8.3)
+                    fps: 25, 
+                    qrbox: (viewfinderWidth, viewfinderHeight) => {
+                        const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+                        const qrboxSize = Math.floor(minEdge * 0.8);
+                        return { width: qrboxSize, height: qrboxSize };
+                    },
                     aspectRatio: 1.0,
                     showViewFinder: false 
                 },
@@ -307,8 +311,10 @@ function processValidScan(decodedText, action = 'APPEND') {
     lastScanTime = Date.now();
     isProcessing = true;
     
-    document.getElementById('scanned-result').innerText = decodedText;
-    document.getElementById('sync-status').innerText = "Đang xử lý...";
+    updatePCDisplay(decodedText);
+    
+    const statusMsg = document.getElementById('pc-pro-status-msg');
+    if (statusMsg) statusMsg.innerText = "Đang xử lý...";
     
     const scanMode = document.querySelector('input[name="scanMode"]:checked').value;
     const orderData = {
@@ -398,9 +404,13 @@ async function processSyncQueue() {
         queue = queue.map(item => item.id === itemToSync.id ? { ...item, synced: true } : item);
         localStorage.setItem('nvh_scan_queue', JSON.stringify(queue));
         
-        if (document.getElementById('scanned-result').innerText === itemToSync.content) {
-            document.getElementById('sync-status').innerText = (payload.action === 'UPDATE' ? "Đã ghi đè thành công!" : "Đã đồng bộ thành công!");
-            document.getElementById('sync-status').style.color = "var(--success)";
+        const lastScannedEl = document.getElementById('pc-last-scanned') || document.getElementById('pc-pro-last-scanned');
+        if (lastScannedEl && lastScannedEl.innerText === itemToSync.content) {
+            const statusMsg = document.getElementById('pc-pro-status-msg');
+            if (statusMsg) {
+                statusMsg.innerText = (payload.action === 'UPDATE' ? "Đã ghi đè thành công!" : "Đã đồng bộ thành công!");
+                statusMsg.style.color = "var(--success)";
+            }
         }
         
         loadLocalHistory();
