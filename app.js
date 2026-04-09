@@ -45,6 +45,12 @@ let lastScanTime = 0;
 let isProcessing = false;
 const SCAN_DELAY = 1500;
 
+// --- Cấu hình go2rtc (v2.2.0) ---
+let go2rtcServer = localStorage.getItem('nvh_go2rtc_server') || 'http://localhost:1984';
+let go2rtcSource = localStorage.getItem('nvh_go2rtc_source') || 'cam1';
+let useIPCamera = localStorage.getItem('nvh_use_ip_camera') === 'true';
+let pcGo2rtc = null; // RTCPeerConnection cho go2rtc
+
 // --- BIẾN CỨU NGUY BẢO MẬT v1.8.7 (Anti-Loop Extreme) ---
 window.isVerifiedSession = false; 
 
@@ -176,21 +182,26 @@ async function toggleScanner() {
 
     if (!isScanning) {
         try {
-            if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
-            
-            // Thông minh hóa việc tìm Camera ID
-            const sModal = document.getElementById('scanner-cam-select-modal');
-            const deviceId = (sModal && sModal.value) ? sModal.value : 
-                             (localStorage.getItem('nvh_scanner_cam_id') || localStorage.getItem('nvh_camera_id'));
-            
-            const cameraConfig = deviceId ? { deviceId: { exact: deviceId } } : { facingMode: "environment" };
+            if (!useIPCamera) {
+                if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
+                
+                // Thông minh hóa việc tìm Camera ID
+                const sModal = document.getElementById('scanner-cam-select-modal');
+                const deviceId = (sModal && sModal.value) ? sModal.value : 
+                                 (localStorage.getItem('nvh_scanner_cam_id') || localStorage.getItem('nvh_camera_id'));
+                
+                const cameraConfig = deviceId ? { deviceId: { exact: deviceId } } : { facingMode: "environment" };
 
-            playBeep();
-            await html5QrCode.start(
-                cameraConfig,
-                { fps: 15 },
-                onScanSuccess
-            );
+                playBeep();
+                await html5QrCode.start(
+                    cameraConfig,
+                    { fps: 15 },
+                    onScanSuccess
+                );
+            } else {
+                // SỬ DỤNG CAMERA IP (go2rtc)
+                await startIPCameraScanner();
+            }
 
             // Tự động bật monitoring nếu đang ở PC Mode
             if (pcMode) startDualMonitoring();
@@ -269,6 +280,9 @@ async function stopScanner() {
         const v2 = document.getElementById('pc-video-2');
         if (v1) v1.srcObject = null;
         if (v2) v2.srcObject = null;
+
+        // Dừng Camera IP nếu đang chạy
+        stopIPCameraScanner();
     } catch (err) { 
         console.warn("Stop error:", err); 
         isScanning = false;
@@ -669,7 +683,7 @@ async function checkActivation() {
     const isActivated = await getAuthToken(); // Tái sử dụng IndexedDB lưu activation
     const overlay = document.getElementById('activation-overlay');
     
-    if (isActivated === '151116_KEY_ACTIVATED') {
+    if (isActivated === '310824_KEY_ACTIVATED') {
         if (overlay) overlay.style.display = 'none';
         document.body.classList.add('app-activated');
         return true;
@@ -685,8 +699,8 @@ async function activateApp() {
     const error = document.getElementById('activation-error');
     const key = input.value.trim();
     
-    if (key === '151116') {
-        await setAuthToken('151116_KEY_ACTIVATED');
+    if (key === '310824') {
+        await setAuthToken('310824_KEY_ACTIVATED');
         showToast("✨ KÍCH HOẠT DIAMOND EDITION THÀNH CÔNG!");
         setTimeout(() => location.reload(), 1000);
     } else {
@@ -748,6 +762,13 @@ function openSettings(group) {
         }
     } else if (group === 'camera') {
         updateCameraList(true);
+        // Load go2rtc settings
+        const ipToggle = document.getElementById('use-ip-camera-modal');
+        const ipServer = document.getElementById('go2rtc-server-modal');
+        const ipSource = document.getElementById('go2rtc-source-modal');
+        if (ipToggle) ipToggle.checked = useIPCamera;
+        if (ipServer) ipServer.value = go2rtcServer;
+        if (ipSource) ipSource.value = go2rtcSource;
     }
     
     toggleDrawer(false);
@@ -766,6 +787,10 @@ function saveModalSettings() {
     const m1Cam = document.getElementById('monitor1-cam-select-modal')?.value;
     const m2Cam = document.getElementById('monitor2-cam-select-modal')?.value;
 
+    const useIP = document.getElementById('use-ip-camera-modal')?.checked;
+    const gServer = document.getElementById('go2rtc-server-modal')?.value;
+    const gSource = document.getElementById('go2rtc-source-modal')?.value;
+
     if (sound !== undefined) localStorage.setItem('nvh_sound_type', sound);
     if (vibrate !== undefined) localStorage.setItem('nvh_vibrate', vibrate);
     if (driveId !== undefined) localStorage.setItem('nvh_drive_folder_id', driveId);
@@ -774,6 +799,11 @@ function saveModalSettings() {
     if (m1Cam) localStorage.setItem('nvh_monitor1_cam_id', m1Cam);
     if (m2Cam) localStorage.setItem('nvh_monitor2_cam_id', m2Cam);
     
+    // Lưu go2rtc config
+    if (useIP !== undefined) { useIPCamera = useIP; localStorage.setItem('nvh_use_ip_camera', useIP); }
+    if (gServer) { go2rtcServer = gServer; localStorage.setItem('nvh_go2rtc_server', gServer); }
+    if (gSource) { go2rtcSource = gSource; localStorage.setItem('nvh_go2rtc_source', gSource); }
+
     // Lưu cài đặt bảo mật v1.8.8 (Đảo ngược auth_skip vì UI là auth_required)
     const authReq = document.getElementById('auth-toggle-modal')?.checked;
     if (authReq !== undefined) localStorage.setItem('nvh_auth_skip', !authReq);
@@ -782,7 +812,11 @@ function saveModalSettings() {
     if (scannerCam) localStorage.setItem('nvh_camera_id', scannerCam);
 
     if (isScanning) {
-        stopScanner().then(() => { if (!pcMode) toggleScanner(); else startScanning(); });
+        stopScanner().then(() => { 
+            if (useIPCamera) startIPCameraScanner();
+            else if (!pcMode) toggleScanner(); 
+            else startScanning(); 
+        });
     }
 }
 
@@ -1829,3 +1863,121 @@ window.onload = () => {
     fetchDataFromSheets(true); 
     updateLastUpdateTimeDisplay(localStorage.getItem('nvh_last_update'));
 };
+
+// --- HỆ THỐNG ĐIỀU KHIỂN CAMERA IP (go2rtc & jsQR) v2.2.0 ---
+async function startIPCameraScanner() {
+    isScanning = true;
+    const btn = pcMode ? document.getElementById('pc-scan-btn') : document.getElementById('start-btn');
+    if (btn) {
+        btn.classList.add('scanning', 'active');
+        btn.querySelector('.btn-main-text').innerText = "DỪNG QUÉT (IP)";
+    }
+
+    try {
+        const video1 = document.getElementById('pc-video-1');
+        const reader = document.getElementById('reader');
+        
+        // Luôn hiển thị video Monitor 1 để quét
+        if (video1) {
+            video1.style.display = 'block';
+            document.getElementById('monitor-cam-1').style.display = 'none';
+            await connectGo2RTC(go2rtcSource, video1);
+            
+            // Bắt đầu vòng lặp quét bằng jsQR
+            ipCameraScanLoop(video1);
+            showToast("Đã kết nối Camera IP: " + go2rtcSource);
+        }
+    } catch (err) {
+        showToast("Lỗi kết nối Camera IP: " + err);
+        stopScanner();
+    }
+}
+
+async function connectGo2RTC(src, videoEl) {
+    if (pcGo2rtc) {
+        pcGo2rtc.close();
+        pcGo2rtc = null;
+    }
+
+    pcGo2rtc = new RTCPeerConnection();
+    
+    pcGo2rtc.ontrack = (event) => {
+        if (videoEl.srcObject !== event.streams[0]) {
+            videoEl.srcObject = event.streams[0];
+        }
+    };
+
+    pcGo2rtc.addTransceiver('video', { direction: 'sendrecv' });
+
+    const offer = await pcGo2rtc.createOffer();
+    await pcGo2rtc.setLocalDescription(offer);
+
+    const response = await fetch(`${go2rtcServer}/api/webrtc?src=${src}`, {
+        method: 'POST',
+        body: offer.sdp
+    });
+
+    if (!response.ok) throw new Error("Server go2rtc không phản hồi!");
+    const answer = await response.text();
+    await pcGo2rtc.setRemoteDescription({ type: 'answer', sdp: answer });
+}
+
+let ipScanInterval = null;
+function ipCameraScanLoop(video) {
+    if (ipScanInterval) clearInterval(ipScanInterval);
+    
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+    ipScanInterval = setInterval(() => {
+        if (!isScanning || video.paused || video.ended) return;
+        if (isProcessing) return;
+
+        canvas.width = video.videoWidth || 640;
+        canvas.height = video.videoHeight || 480;
+        if (canvas.width === 0) return;
+
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height, {
+            inversionAttempts: "dontInvert",
+        });
+
+        if (code && code.data) {
+            onScanSuccess(code.data);
+        }
+    }, 250); // Quét mỗi 250ms để tối ưu hiệu năng
+}
+
+function stopIPCameraScanner() {
+    if (ipScanInterval) {
+        clearInterval(ipScanInterval);
+        ipScanInterval = null;
+    }
+    if (pcGo2rtc) {
+        pcGo2rtc.close();
+        pcGo2rtc = null;
+    }
+}
+
+async function testGo2RTCConnection() {
+    const server = document.getElementById('go2rtc-server-modal')?.value || go2rtcServer;
+    const source = document.getElementById('go2rtc-source-modal')?.value || go2rtcSource;
+    
+    showToast("Đang kiểm tra: " + server);
+    try {
+        const res = await fetch(`${server}/api/streams`, { method: 'GET' });
+        if (res.ok) {
+            const data = await res.json();
+            if (data[source]) {
+                showToast("✅ Kết nối tốt! Đã thấy luồng: " + source);
+            } else {
+                showToast("⚠️ Server OK nhưng không thấy luồng: " + source);
+            }
+        } else {
+            showToast("❌ Lỗi: Server phản hồi mã " + res.status);
+        }
+    } catch (e) {
+        showToast("❌ Lỗi kết nối: Chắc chắn go2rtc đang chạy!");
+    }
+}

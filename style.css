@@ -773,6 +773,42 @@ body {
 .settings-divider { height: 1px; background: rgba(255,215,0,0.1); margin: 20px 0; }
 .settings-hint { font-size: 0.65rem; color: var(--gray-text); margin-top: 8px; opacity: 0.7; font-style: italic; }
 
+/* Camera Select Item v2.2.0 */
+.cam-select-item {
+    background: rgba(255, 255, 255, 0.03);
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.cam-select-item label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 0.75rem;
+    color: var(--primary-color);
+}
+
+.info-box-gold {
+    background: rgba(255, 215, 0, 0.05);
+    border: 1px solid rgba(255, 215, 0, 0.2);
+    padding: 15px;
+    border-radius: 12px;
+    margin-top: 20px;
+}
+
+.info-title {
+    color: var(--primary-color);
+    font-weight: 800;
+    font-size: 0.8rem;
+    margin-bottom: 5px;
+}
+
+.info-desc {
+    font-size: 0.7rem;
+    color: var(--gray-text);
+    line-height: 1.4;
+}
+
 .toggle-group { display: flex; justify-content: space-between; align-items: center; }
 .toggle-switch { position: relative; display: inline-block; width: 44px; height: 14px; cursor: pointer; }
 .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.1); transition: .4s; border-radius: 20px; }

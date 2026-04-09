@@ -11,6 +11,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="icon.png">
     <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 </head>
 <body>
     <div class="app-container" id="app-container">
@@ -277,7 +278,7 @@
         </div>
 
         <footer class="footer">
-            <span class="copyright">Thực hiện bởi <i>NVH</i> — Version 2.1.5 [Diamond Edition Patch]</span>
+            <span class="copyright">Thực hiện bởi <i>NVH</i> — Version 2.2.0 [Diamond Edition Patch]</span>
         </footer>
     </div>
 
@@ -331,7 +332,7 @@
         </div>
 
         <div class="drawer-footer">
-            <div class="version-info">NVH Scanner Pro — v2.1.5</div>
+            <div class="version-info">NVH Scanner Pro — v2.2.0</div>
         </div>
     </div>
 
@@ -440,14 +441,36 @@
                     <select id="monitor2-cam-select-modal" class="settings-select" onchange="saveModalSettings()"></select>
                 </div>
 
-                <!-- HƯỚNG DẪN CAMERA IP CHO MAC -->
+                <div class="settings-divider"></div>
+                
+                <div class="settings-group">
+                    <label style="color: var(--primary-color);">🌐 KẾT NỐI CAMERA IP (GO2RTC)</label>
+                    <div class="toggle-group" style="margin: 10px 0;">
+                        <label>Sử dụng Camera IP cho Quét mã</label>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="use-ip-camera-modal" onchange="saveModalSettings()">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="cam-select-item">
+                        <label style="font-size: 0.8rem;">Server URL (go2rtc)</label>
+                        <input type="text" id="go2rtc-server-modal" class="settings-select" placeholder="http://localhost:1984" onchange="saveModalSettings()">
+                    </div>
+                    <div class="cam-select-item" style="margin-top: 10px;">
+                        <label style="font-size: 0.8rem;">Tên luồng (Stream Name)</label>
+                        <input type="text" id="go2rtc-source-modal" class="settings-select" placeholder="cam1" onchange="saveModalSettings()">
+                    </div>
+                    
+                    <button class="modal-btn btn-append" onclick="testGo2RTCConnection()" style="width: 100%; margin-top: 15px; background: rgba(0, 255, 0, 0.1); border: 1px solid #00ff00;">
+                        ⚡ KIỂM TRA KẾT NỐI
+                    </button>
+                </div>
+
                 <div class="info-box-gold">
-                    <div class="info-title">💡 KẾT NỐI CAMERA IP (SMARTPSS) TRÊN MAC</div>
+                    <div class="info-title">💡 MẸO CAMERA IP</div>
                     <div class="info-desc">
-                        1. Cài đặt phần mềm <b>OBS Studio</b> trên MacOS.<br>
-                        2. Thêm nguồn "Window Capture" chọn cửa sổ SmartPSS.<br>
-                        3. Nhấn <b>"Start Virtual Camera"</b> trong OBS.<br>
-                        4. Quay lại đây nhấn "LÀM MỚI" và chọn <b>OBS Virtual Camera</b>.
+                        Chạy file <b>go2rtc.exe</b> (Windows) hoặc binary (Mac), thêm link RTSP vào config. App sẽ tự động nhận luồng WebRTC cực nhanh.
                     </div>
                 </div>
             </div>
@@ -646,7 +669,7 @@
             </div>
             <button class="btn-activate-gold" onclick="activateApp()">KÍCH HOẠT DIAMOND EDITION</button>
             <p id="activation-error" class="gold-error" style="display: none;">Key kích hoạt không chính xác!</p>
-            <div class="activation-footer-gold">TCT Scanner Pro — Version 2.1.5 [Diamond Edition Patch]</div>
+            <div class="activation-footer-gold">TCT Scanner Pro — Version 2.2.0 [Diamond Edition Patch]</div>
         </div>
     </div>
 
