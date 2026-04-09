@@ -1,10 +1,16 @@
 # TCT SCANNER PRO - LỊCH SỬ PHÁT TRIỂN CHI TIẾT (VERSION LOG)
 
-Tài liệu này dùng để AI truy xuất lại các trạng thái, tính năng và logic cũ của từng phiên bản nếu người dùng muốn quay lại (Rollback) hoặc khôi phục tính năng cũ.
+---
+
+## [V1.1.4 Beta] - 04/2026 (Hiện tại)
+- **Sửa lỗi nghiêm trọng**:
+    - **Data Normalization**: Sửa lỗi "0 đơn hàng" khi Sheets trả về dữ liệu dạng mảng (getValues()) thay vì Object. App tự động map Cột A=Time, B=ID, C=Content.
+    - **Date Parsing**: Hỗ trợ dấu gạch ngang `-` (ví dụ: `09-04-2026`) thường xuất hiện trên một số dòng của người dùng.
+- **Trạng thái**: Khả năng tương thích dữ liệu cao hơn.
 
 ---
 
-## [V1.1.3 Beta] - 04/2026 (Hiện tại)
+## [V1.1.3 Beta] - 04/2026
 - **Tính năng mới**: 
     - **In-Tab Scan**: Quét mã tại Tab bằng Modal `search-scan-modal`, không nhảy Tab.
     - **Download Data**: Nút "TẢI DỮ LIỆU" thay thế cho nút "Làm mới".

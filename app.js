@@ -75,32 +75,41 @@ function formatDate(date) {
 }
 
 function parseDate(dateStr) {
-    if (!dateStr || typeof dateStr !== 'string') return new Date(0);
+    if (!dateStr) return new Date(0);
+    if (dateStr instanceof Date) return dateStr;
+    if (typeof dateStr !== 'string') return new Date(dateStr);
     
-    // Thử định dạng chuẩn: DD/MM/YYYY HH:mm:ss
+    // Chuẩn hóa dấu gạch ngang thành gạch chéo để dễ xử lý
+    const cleanStr = dateStr.replace(/-/g, '/').trim();
+    
     try {
-        const parts = dateStr.split(' ');
+        // Thử định dạng chuẩn: DD/MM/YYYY HH:mm:ss hoặc DD/MM/YYYY, HH:mm:ss
+        const parts = cleanStr.split(/[\s,]+/);
         if (parts.length >= 2) {
             const dateParts = parts[0].split('/');
             const timeParts = parts[1].split(':');
-            if (dateParts.length === 3 && timeParts.length >= 2) {
-                return new Date(dateParts[2], dateParts[1] - 1, dateParts[0], 
-                                timeParts[0], timeParts[1], timeParts[2] || 0);
+            
+            // Trường hợp: DD/MM/YYYY HH:mm:ss
+            if (dateParts.length === 3) {
+                const day = parseInt(dateParts[0]);
+                const month = parseInt(dateParts[1]) - 1;
+                const year = parseInt(dateParts[2]);
+                const h = parseInt(timeParts[0]);
+                const m = parseInt(timeParts[1]);
+                const s = parseInt(timeParts[2] || 0);
+                return new Date(year, month, day, h, m, s);
             }
         }
         
-        // Thử định dạng có dấu phẩy: DD/MM/YYYY, HH:mm:ss
-        const commaParts = dateStr.split(', ');
-        if (commaParts.length >= 2) {
-            const dateParts = commaParts[0].split('/');
-            const timeParts = commaParts[1].split(':');
-            return new Date(dateParts[2], dateParts[1] - 1, dateParts[0], 
-                            timeParts[0], timeParts[1], timeParts[2] || 0);
-        }
-
         // Fallback cho trình duyệt tự xử lý
-        const parsed = new Date(dateStr);
+        const parsed = new Date(cleanStr);
         if (!isNaN(parsed.getTime())) return parsed;
+        
+        // Trường hợp đặc biệt: Chỉ có ngày DD/MM/YYYY
+        const soloDate = cleanStr.split('/');
+        if (soloDate.length === 3) {
+             return new Date(parseInt(soloDate[2]), parseInt(soloDate[1])-1, parseInt(soloDate[0]));
+        }
     } catch (e) {
         console.warn("Lỗi parse ngày tháng:", dateStr, e);
     }
@@ -670,6 +679,29 @@ async function fetchDataFromSheets(isAuto = false) {
         if (data && Array.isArray(data)) {
             console.log(`📥 Tổng dữ liệu nhận về từ Sheets: ${data.length} dòng.`);
             
+            // 0. CHUẨN HÓA DỮ LIỆU (Normalization) v1.1.4
+            // Chuyển mảng 2D (nếu có) sang Object để code có thể đọc được key .scanTime
+            data = data.map(item => {
+                if (Array.isArray(item)) {
+                    // Cột A=0, B=1, C=2, D=3
+                    return {
+                        scanTime: item[0] || '',
+                        orderId: item[1] || '',
+                        content: item[2] || '',
+                        endTime: item[3] || ''
+                    };
+                }
+                // Nếu là Object nhưng thiếu key scanTime (có thể do Apps Script map sai cột)
+                if (item && typeof item === 'object' && !item.scanTime) {
+                    return {
+                        scanTime: item.A || item.time || item.timestamp || '',
+                        orderId: item.B || item.id || item.orderId || '',
+                        content: item.C || item.code || item.content || ''
+                    };
+                }
+                return item;
+            });
+
             // 1. Lọc dữ liệu trong vòng 30 ngày (1 tháng) theo yêu cầu
             const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
             const filteredByDate = data.filter(item => {

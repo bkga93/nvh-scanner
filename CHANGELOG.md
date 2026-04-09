@@ -4,7 +4,14 @@ Tất cả các thay đổi quan trọng đối với dự án **TCT Scanner Pro
 
 ---
 
-## [1.1.0 Beta] - 2026-04-09
+## [1.1.4 Beta] - 2026-04-09
+### Added
+- **Chuẩn hóa dữ liệu:** Tự động nhận diện dữ liệu Sheets dạng mảng 2D hoặc Object không tiêu đề.
+- **Tối ưu ngày tháng:** Hỗ trợ parse ngày có dấu gạch ngang (-) và xử lý khoảng trắng (trim).
+
+---
+
+## [1.1.3 Beta] - 2026-04-09
 ### Added
 - **Gợi ý tìm kiếm tức thì (Instant Suggestion):** Hiển thị kết quả từ bộ nhớ máy ngay lập tức khi gõ phím.
 - **Đồng bộ dữ liệu thông minh:** Tự động lọc dữ liệu trong vòng 30 ngày và loại bỏ mã trùng lặp khi cập nhật.

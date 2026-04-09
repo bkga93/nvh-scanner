@@ -1,11 +1,11 @@
-# TCT SCANNER PRO - PROJECT CONTEXT FOR AI (V1.1.3 Beta)
+# TCT SCANNER PRO - PROJECT CONTEXT FOR AI (V1.1.4 Beta)
 
 Tài liệu này lưu trữ toàn bộ ngữ cảnh, logic và các quyết định kỹ thuật quan trọng của dự án để AI có thể tiếp tục hỗ trợ ngay lập tức khi được tải lên.
 
 ## 1. Thông tin chung
 - **Tên dự án**: TCT Scanner Pro (Diamond Edition).
 - **Mục đích**: Quản lý đơn hàng Shopee, quét mã QR, đồng bộ Google Sheets, giám sát Camera và ghi hình bằng chứng.
-- **Phiên bản hiện tại**: V1.1.3 Beta (Cập nhật 09/04/2026).
+- **Phiên bản hiện tại**: V1.1.4 Beta (Cập nhật 09/04/2026).
 - **Công nghệ**: HTML5, Vanilla CSS, Javascript (ES6), IndexedDB, WebRTC (go2rtc), Google Apps Script.
 
 ## 2. Logic Xử lý Dữ liệu (Dữ liệu Tab)
