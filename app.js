@@ -75,12 +75,37 @@ function formatDate(date) {
 }
 
 function parseDate(dateStr) {
-    // DD/MM/YYYY HH:mm:ss -> Date
-    const parts = dateStr.split(' ');
-    if (parts.length < 2) return new Date(0);
-    const dParts = parts[0].split('/');
-    const tParts = parts[1].split(':');
-    return new Date(dParts[2], dParts[1] - 1, dParts[0], tParts[0], tParts[1], tParts[2]);
+    if (!dateStr || typeof dateStr !== 'string') return new Date(0);
+    
+    // Thử định dạng chuẩn: DD/MM/YYYY HH:mm:ss
+    try {
+        const parts = dateStr.split(' ');
+        if (parts.length >= 2) {
+            const dateParts = parts[0].split('/');
+            const timeParts = parts[1].split(':');
+            if (dateParts.length === 3 && timeParts.length >= 2) {
+                return new Date(dateParts[2], dateParts[1] - 1, dateParts[0], 
+                                timeParts[0], timeParts[1], timeParts[2] || 0);
+            }
+        }
+        
+        // Thử định dạng có dấu phẩy: DD/MM/YYYY, HH:mm:ss
+        const commaParts = dateStr.split(', ');
+        if (commaParts.length >= 2) {
+            const dateParts = commaParts[0].split('/');
+            const timeParts = commaParts[1].split(':');
+            return new Date(dateParts[2], dateParts[1] - 1, dateParts[0], 
+                            timeParts[0], timeParts[1], timeParts[2] || 0);
+        }
+
+        // Fallback cho trình duyệt tự xử lý
+        const parsed = new Date(dateStr);
+        if (!isNaN(parsed.getTime())) return parsed;
+    } catch (e) {
+        console.warn("Lỗi parse ngày tháng:", dateStr, e);
+    }
+    
+    return new Date(0);
 }
 
 // --- Biến cho v1.6.4 (PC Mode & Recording) ---
@@ -643,23 +668,28 @@ async function fetchDataFromSheets(isAuto = false) {
         let data = await response.json();
         
         if (data && Array.isArray(data)) {
+            console.log(`📥 Tổng dữ liệu nhận về từ Sheets: ${data.length} dòng.`);
+            
             // 1. Lọc dữ liệu trong vòng 30 ngày (1 tháng) theo yêu cầu
             const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
-            data = data.filter(item => {
+            const filteredByDate = data.filter(item => {
                 if (!item.scanTime) return false;
                 const itemDate = parseDate(item.scanTime);
                 return itemDate.getTime() >= thirtyDaysAgo;
             });
+            
+            console.log(`📅 Sau khi lọc 30 ngày: ${filteredByDate.length} dòng.`);
 
             // 2. Loại bỏ trùng lặp dựa trên Mã đơn hàng (content) - Giữ bản ghi mới nhất
             const uniqueMap = new Map();
-            data.forEach(item => {
+            filteredByDate.forEach(item => {
                 const existing = uniqueMap.get(item.content);
                 if (!existing || parseDate(item.scanTime) > parseDate(existing.scanTime)) {
                     uniqueMap.set(item.content, item);
                 }
             });
             data = Array.from(uniqueMap.values());
+            console.log(`✨ Sau khi bỏ trùng lặp: ${data.length} dòng.`);
 
             // Sắp xếp lại theo thời gian mới nhất lên đầu
             data.sort((a, b) => parseDate(b.scanTime) - parseDate(a.scanTime));
