@@ -222,7 +222,8 @@ body {
 }
 
 #reader__scan_region {
-    display: none !important; /* Xóa bỏ vùng quét mờ hình vuông/chữ nhật mặc định v1.8.5 */
+    opacity: 0 !important; /* Thay vì display: none, sử dụng opacity để thư viện vẫn tính toán được tọa độ */
+    pointer-events: none !important;
 }
 
 #reader video {

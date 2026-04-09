@@ -132,9 +132,13 @@ function playBeep(presetKey = null) {
 }
 
 function triggerFlash() {
-    const flash = document.getElementById('flash-overlay');
-    flash.classList.add('flash-active');
-    setTimeout(() => flash.classList.remove('flash-active'), 500);
+    try {
+        const flash = document.getElementById('flash-overlay');
+        if (flash) {
+            flash.classList.add('flash-active');
+            setTimeout(() => flash.classList.remove('flash-active'), 500);
+        }
+    } catch (e) { console.warn("Flash error:", e); }
 }
 
 // Chuyển đổi Tab
@@ -273,81 +277,102 @@ async function stopScanner() {
 
 // Khi quét thành công
 async function onScanSuccess(decodedText) {
-    const now = Date.now();
-    if (isProcessing || (now - lastScanTime < SCAN_DELAY)) return;
+    try {
+        const now = Date.now();
+        if (isProcessing || (now - lastScanTime < SCAN_DELAY)) return;
 
-    playBeep();
-    triggerFlash();
+        playBeep();
+        triggerFlash();
 
-    if (isSearchScanning) {
-        if (searchTarget === 'history') {
-            document.getElementById('search-input').value = decodedText;
-            filterHistory();
-        } else {
-            document.getElementById('remote-search-input').value = decodedText;
-            filterRemoteData(true); 
+        console.log("📢 Phát hiện mã:", decodedText);
+
+        if (isSearchScanning) {
+            if (searchTarget === 'history') {
+                const searchInput = document.getElementById('search-input');
+                if (searchInput) {
+                    searchInput.value = decodedText;
+                    filterHistory();
+                }
+            } else {
+                const remoteSearch = document.getElementById('remote-search-input');
+                if (remoteSearch) {
+                    remoteSearch.value = decodedText;
+                    filterRemoteData(true); 
+                }
+            }
+            stopScanner();
+            showToast("Đã tìm thấy mã: " + decodedText);
+            return;
         }
-        stopScanner();
-        showToast("Đã tìm thấy mã: " + decodedText);
-        return;
+
+        // Trigger DỪNG QUAY bằng mã QR
+        if (recordingActive && decodedText.toUpperCase() === "DỪNG QUAY") {
+            stopDualRecording();
+            return;
+        }
+
+        // Kiểm tra trùng lặp
+        const isDuplicateRemote = remoteDataCache.some(item => item.content === decodedText);
+        const localQueueStr = localStorage.getItem('nvh_scan_queue');
+        const localQueue = JSON.parse(localQueueStr || '[]');
+        const isDuplicateLocal = localQueue.some(item => item.content === decodedText);
+
+        if (isDuplicateRemote || isDuplicateLocal) {
+            currentPendingScan = decodedText;
+            showDuplicateModal(decodedText);
+            return;
+        }
+
+        processValidScan(decodedText);
+    } catch (err) {
+        console.error("onScanSuccess error:", err);
+        isProcessing = false;
     }
-
-    // Trigger DỪNG QUAY bằng mã QR
-    if (recordingActive && decodedText.toUpperCase() === "DỪNG QUAY") {
-        stopDualRecording();
-        return;
-    }
-
-    // Kiểm tra trùng lặp
-    const isDuplicateRemote = remoteDataCache.some(item => item.content === decodedText);
-    const localQueue = JSON.parse(localStorage.getItem('nvh_scan_queue') || '[]');
-    const isDuplicateLocal = localQueue.some(item => item.content === decodedText);
-
-    if (isDuplicateRemote || isDuplicateLocal) {
-        currentPendingScan = decodedText;
-        showDuplicateModal(decodedText);
-        return;
-    }
-
-    processValidScan(decodedText);
 }
 
 function processValidScan(decodedText, action = 'APPEND') {
-    lastScanTime = Date.now();
-    isProcessing = true;
-    
-    updatePCDisplay(decodedText);
-    
-    const statusMsg = document.getElementById('pc-pro-status-msg');
-    if (statusMsg) statusMsg.innerText = "Đang xử lý...";
-    
-    const scanMode = document.querySelector('input[name="scanMode"]:checked').value;
-    const orderData = {
-        id: Date.now(),
-        orderId: decodedText.length > 5 ? decodedText : "NVH-" + Math.random().toString(36).substr(2, 6).toUpperCase(),
-        content: decodedText,
-        scanTime: new Date().toLocaleString('vi-VN'),
-        synced: false,
-        action: action 
-    };
+    try {
+        lastScanTime = Date.now();
+        isProcessing = true;
+        
+        updatePCDisplay(decodedText);
+        
+        const statusMsg = document.getElementById('pc-pro-status-msg');
+        if (statusMsg) statusMsg.innerText = "Đang xử lý...";
+        
+        const scanModeEl = document.querySelector('input[name="scanMode"]:checked');
+        const scanMode = scanModeEl ? scanModeEl.value : 'single';
+        
+        const orderData = {
+            id: Date.now(),
+            orderId: decodedText.length > 5 ? decodedText : "NVH-" + Math.random().toString(36).substr(2, 6).toUpperCase(),
+            content: decodedText,
+            scanTime: new Date().toLocaleString('vi-VN'),
+            synced: false,
+            action: action 
+        };
 
-    saveToQueue(orderData);
-    isProcessing = false;
-    processSyncQueue();
+        saveToQueue(orderData);
+        processSyncQueue();
 
-    // v1.6.5: Lấy ID để ghi hình thủ công
-    lastScannedId = orderData.orderId;
-    updatePCDisplay(orderData.orderId);
+        // v1.6.5: Lấy ID để ghi hình thủ công
+        lastScannedId = orderData.orderId;
+        updatePCDisplay(orderData.orderId);
 
-    if (pcMode && isAutoRec) {
-        if (recordingActive) stopDualRecording();
-        setTimeout(() => startDualRecording(orderData.orderId), 300);
+        if (pcMode && typeof isAutoRec !== 'undefined' && isAutoRec) {
+            if (recordingActive) stopDualRecording();
+            setTimeout(() => startDualRecording(orderData.orderId), 300);
+        }
+
+        // Tích hợp Bảng Lịch sử Nhanh v2.1.0
+        if (pcMode) updatePCRecentList(decodedText, 'success');
+
+        if (scanMode === 'single' && !pcMode) setTimeout(() => stopScanner(), 500);
+    } catch (err) {
+        console.error("processValidScan error:", err);
+    } finally {
+        isProcessing = false;
     }
-
-    // Tích hợp Bảng Lịch sử Nhanh v2.1.0
-    if (pcMode) updatePCRecentList(decodedText, 'success');
-
-    if (scanMode === 'single' && !pcMode) setTimeout(() => stopScanner(), 500);
 }
 
 // --- LOGIC XỬ LÝ TRÙNG LẶP ---
