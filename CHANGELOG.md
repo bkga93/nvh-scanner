@@ -4,6 +4,14 @@ Tất cả các thay đổi quan trọng đối với dự án **TCT Scanner Pro
 
 ---
 
+## [1.1.7 Beta] - 2026-04-10
+### Added
+- **UI:** Thêm hiệu ứng thành công (tick ✅) cho nút Tải dữ liệu.
+### Fixed
+- **Bug:** Sửa lỗi Crash nghiêm trọng dẫn đến việc hụt dữ liệu đơn hàng khi đồng bộ.
+- **UX:** Chỉnh lại dòng trạng thái hiển thị số lượng đơn và giờ tải.
+- **Toast:** Tăng thời gian hiển thị thông báo lên 5 giây.
+
 ## [1.1.6 Beta] - 2026-04-10
 ### Added
 - **UI:** Thêm dòng thông báo "Đang được phát triển ...." vào Tab Xem lại.

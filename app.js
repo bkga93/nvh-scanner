@@ -632,7 +632,23 @@ function showAllRemoteData() {
     const input = document.getElementById('remote-search-input');
     if (input) input.value = ""; // Xóa query để hiện tất cả
     displayRemoteData(remoteDataCache);
-    showToast(`Đang hiển thị toàn bộ ${remoteDataCache.length} đơn hàng`);
+    showToast(`Đang hiển thị toàn bộ ${remoteDataCache.length} đơn hàng`, 5000);
+}
+
+function updateLastUpdateTimeDisplay(timeStr, count = 0) {
+    const display = document.getElementById('last-update-display');
+    if (!display) return;
+    
+    if (!timeStr) {
+        display.innerText = "Chưa có dữ liệu.";
+        return;
+    }
+
+    if (count > 0) {
+        display.innerText = `Đã tải ${count} đơn lúc ${timeStr}`;
+    } else {
+        display.innerText = `Cập nhật: ${timeStr}`;
+    }
 }
 
 async function searchRemoteSheets(query) {
@@ -739,15 +755,25 @@ async function fetchDataFromSheets(isAuto = false) {
         const now = formatDate(new Date());
         localStorage.setItem('nvh_last_update', now);
         
-        updateLastUpdateTimeDisplay(now);
+        updateLastUpdateTimeDisplay(now, data.length);
         displayRemoteData();
         
         if (!isAuto) {
             hideToast(); // Ẩn thông báo "Đang tải" trước khi hiện kết quả
             if (data.length > 0) {
-                showToast(`✅ Đã tải ${data.length} đơn hàng trong 30 ngày qua!`, 2000);
+                showToast(`✅ Đã tải ${data.length} đơn hàng thành công!`, 5000);
+                
+                // Hiệu ứng nút Tải dữ liệu thành công v1.1.7
+                const originalHtml = btn.innerHTML;
+                btn.classList.add('success-state');
+                btn.innerHTML = `✅ ĐÃ XONG (${data.length})`;
+                
+                setTimeout(() => {
+                    btn.classList.remove('success-state');
+                    btn.innerHTML = originalHtml;
+                }, 3000);
             } else {
-                showToast(`⚠️ Không có đơn hàng nào trong 30 ngày qua.`, 2000);
+                showToast(`⚠️ Không có đơn hàng nào trong 30 ngày qua.`, 5000);
             }
         }
     } catch (error) {

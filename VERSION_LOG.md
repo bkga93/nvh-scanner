@@ -2,15 +2,16 @@
 
 ---
 
-## [V1.1.6 Beta] - 10/04/2026 (Hiện tại)
-- **Sửa lỗi Google Sheets**: 
-    - Khắc phục lỗi không tải được dữ liệu nhập tay có định dạng "Giờ trước Ngày sau" hoặc thiếu số 0 ở đầu (ví dụ: `8:0:19 10/4/2026`).
-- **Cải tiến UX/UI**:
-    - Điều chỉnh thời gian hiển thị thông báo (Toast) về **2 giây** để cân bằng tốc độ đọc.
-    - Bổ sung dòng thông báo "Đang phát triển ...." cho Tab Xem lại.
-- **Trạng thái**: Hỗ trợ tốt hơn cho việc quản lý dữ liệu thủ công.
+## [V1.1.7 Beta] - 10/04/2026 (Hiện tại)
+- **Sửa lỗi Crash hệ thống**: Khắc phục việc thiếu hàm `updateLastUpdateTimeDisplay` gây treo ứng dụng khi đồng bộ dữ liệu. Đây là nguyên nhân khiến một số đơn hàng mới không hiển thị.
+- **Nâng cấp UI Đồng bộ**:
+    - Nút Tải dữ liệu đổi trạng thái sang **✅ ĐÃ XONG** màu xanh sau khi tải thành công.
+    - Cập nhật dòng trạng thái chi tiết: `Đã tải [X] đơn lúc [Giờ]`.
+- **Cải thiện UX**: Tăng thời gian hiển thị Toast thông báo lên 5 giây.
 
 ---
+
+## [V1.1.6 Beta] - 10/04/2026
 
 ## [V1.1.5 Beta] - 04/2026
 

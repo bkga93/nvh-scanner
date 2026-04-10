@@ -374,6 +374,13 @@ body {
     filter: brightness(0.9);
 }
 
+.download-btn-main.success-state {
+    background: linear-gradient(135deg, #00FF88, #00CC6A);
+    color: #1A051A;
+    box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
+    transform: scale(1.02);
+}
+
 .download-btn-main i {
     font-style: normal;
 }
