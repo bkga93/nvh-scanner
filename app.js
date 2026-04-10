@@ -469,14 +469,19 @@ function processValidScan(decodedText, action = 'APPEND') {
 
         const orderData = {
             id: trackingData.id || Date.now(),
-            orderId: (decodedText && decodedText.length > 5) ? decodedText : "NVH-" + Math.random().toString(36).substr(2, 6).toUpperCase(),
-            content: decodedText || '--- ERR ---', // Tránh để trống gây lỗi
+            orderId: (decodedText && decodedText.length > 3) ? decodedText : ("NVH-" + Math.random().toString(36).substr(2, 6).toUpperCase()),
+            content: decodedText || '--- ERR ---',
             scanTime: trackingData.startTime || formatDate(new Date()),
             endTime: trackingData.endTime || '',
             evidenceImage: trackingData.snapshot || '',
             synced: false,
             action: action 
         };
+        
+        if (!decodedText) {
+            showToast("⚠️ CẢNH BÁO: Mã đơn trống! Vui lòng quét lại.", 5000);
+            console.error("Critical: processValidScan empty decodedText");
+        }
 
         saveToQueue(orderData);
         processSyncQueue();
@@ -707,64 +712,54 @@ async function fetchDataFromSheets(isAuto = false) {
             body: JSON.stringify({ action: "getData" }),
             headers: { 'Content-Type': 'text/plain;charset=utf-8' }
         });
-        let data = await response.json();
+        let rawJson = await response.json();
         
-        if (data && Array.isArray(data)) {
-            console.log(`📥 Tổng dữ liệu nhận về từ Sheets: ${data.length} dòng.`);
-            if (data.length > 0) {
-                console.log("Dòng đầu tiên (Raw):", JSON.stringify(data[0]));
-                console.log("Dòng cuối cùng (Raw):", JSON.stringify(data[data.length - 1]));
-            }
-            
-            // 0. CHUẨN HÓA DỮ LIỆU (Normalization) v1.1.4
-            // Chuyển mảng 2D (nếu có) sang Object để code có thể đọc được key .scanTime
-            data = data.map(item => {
-                if (Array.isArray(item)) {
-                    // Cột A=0, B=1, C=2, D=3
-                    return {
-                        scanTime: item[0] || '',
-                        orderId: item[1] || '',
-                        content: item[2] || '',
-                        endTime: item[3] || ''
-                    };
-                }
-                // Nếu là Object nhưng thiếu key scanTime (có thể do Apps Script map sai cột)
-                if (item && typeof item === 'object' && !item.scanTime) {
-                    return {
-                        scanTime: item.A || item.time || item.timestamp || '',
-                        orderId: item.B || item.id || item.orderId || '',
-                        content: item.C || item.code || item.content || ''
-                    };
-                }
-                return item;
-            });
+        // --- XỬ LÝ ĐA DẠNG CẤU TRÚC PHẢN HỒI (GAS) ---
+        let data = [];
+        if (Array.isArray(rawJson)) {
+            data = rawJson;
+        } else if (rawJson && rawJson.data && Array.isArray(rawJson.data)) {
+            data = rawJson.data;
+        } else if (rawJson && rawJson.rows && Array.isArray(rawJson.rows)) {
+            data = rawJson.rows;
+        }
 
-            // 1. TẠM THỜI BỎ BỘ LỌC 30 NGÀY ĐỂ KIỂM TRA DỮ LIỆU (v1.1.7.6)
-            const filteredByDate = data.filter(item => {
-                if (!item.scanTime && !item.content) return false;
-                return true; // Chấp nhận tất cả để xác minh kết nối
-            });
-            
-            console.log(`📅 Nhận được: ${filteredByDate.length} dòng từ Sheets.`);
-
-            // 2. Loại bỏ trùng lặp dựa trên Mã đơn hàng (content) - Giữ bản ghi mới nhất
-            const uniqueMap = new Map();
-            filteredByDate.forEach(item => {
-                if (!item.content) return;
-                const existing = uniqueMap.get(item.content);
-                const itemTime = parseDate(item.scanTime).getTime();
-                const existingTime = existing ? parseDate(existing.scanTime).getTime() : 0;
+        if (data.length > 0) {
+            // Chuẩn hóa dữ liệu v1.1.7.7 (MẠNH MẼ HƠN)
+            data = data.map((item, index) => {
+                let normalized = { scanTime: '', orderId: '', content: '', endTime: '', rowIndex: index + 1 };
                 
-                if (!existing || itemTime > existingTime) {
-                    uniqueMap.set(item.content, item);
+                if (Array.isArray(item)) {
+                    normalized.scanTime = item[0] || '';
+                    normalized.orderId = item[1] || '';
+                    normalized.content = item[2] || '';
+                    normalized.endTime = item[3] || '';
+                } else if (typeof item === 'object') {
+                    normalized.scanTime = item.scanTime || item.time || item.A || '';
+                    normalized.orderId = item.orderId || item.id || item.B || '';
+                    normalized.content = item.content || item.code || item.C || '';
+                    normalized.endTime = item.endTime || item.D || '';
                 }
+                return normalized;
             });
-            data = Array.from(uniqueMap.values());
-            
-            // Sắp xếp lại theo thời gian mới nhất lên đầu (Phòng thủ lỗi parseDate)
+
+            // --- TẮT TẠM THỜI BỘ LỌC 30 NGÀY ĐỂ KIỂM TRA (V1.1.7.7) ---
+            const finalData = data.filter(item => {
+                if (!item.scanTime && !item.content) return false;
+                // Bỏ qua dòng tiêu đề
+                if (item.scanTime && item.scanTime.toString().includes("THỜI GIAN")) return false;
+                return true; 
+            });
+
+            console.log(`📊 Tổng số dòng nhận về sau khi chuẩn hóa: ${finalData.length}`);
+            data = finalData;
+
+            // Sắp xếp lại theo thời gian mới nhất lên đầu
             data.sort((a, b) => {
                 try {
-                    return parseDate(b.scanTime).getTime() - parseDate(a.scanTime).getTime();
+                    const timeA = parseDate(a.scanTime).getTime();
+                    const timeB = parseDate(b.scanTime).getTime();
+                    return timeB - timeA;
                 } catch(e) { return 0; }
             });
         }
@@ -1176,7 +1171,7 @@ function previewSound(val) {
 }
 
 window.onload = () => {
-    console.log("🚀 TCT APP V1.1.7.6 - EMERGENCY FIX IS LIVE!");
+    console.log("🚀 TCT APP V1.1.7.7 - DATA RECOVERY EDITION IS LIVE!");
     // Khởi tạo mặc định
     if (localStorage.getItem('nvh_sound_type') === null) {
         localStorage.setItem('nvh_sound_type', 'standard');
