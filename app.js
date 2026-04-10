@@ -1,5 +1,5 @@
 // ==========================================
-// TCT SCANNER PRO V1.2.2.0 - CLOUD ERA
+// TCT SCANNER PRO V1.2.2.1 - CLOUD ERA
 // PHIÊN BẢN DIAMOND CLOUD (FIREBASE)
 // ==========================================
 
@@ -55,7 +55,7 @@ const BEEP_NAMES = {
 
 // --- KHỞI TẠO APP ---
 window.onload = async () => {
-    console.log("🚀 TCT APP V1.2.1.0 - CLOUD ERA IS LIVE!");
+    console.log("🚀 TCT APP V1.2.2.1 - CLOUD ERA IS LIVE!");
     applyTheme(settings.theme);
     applyFontSize(settings.fontSize);
     checkActivation();
@@ -212,15 +212,20 @@ function onScanSuccess(decodedText) {
     if (existing) {
         pendingScanCode = code;
         document.getElementById('dup-code-text').innerText = orderId;
+        // Dừng máy quét ngay lập tức để người dùng tập trung xử lý modal trùng lặp
+        if (isScanning) toggleScanner(); 
+        
         openModal('duplicate-modal');
         playDuplicateSound();
-        if (scanMode === 'single') toggleScanner();
     } else {
         processFinalScan(orderId, code);
         playBeep();
         if (settings.voiceEnabled) speakSuccess();
         if (settings.vibrate) navigator.vibrate(200);
         showScanResultOverlay(orderId);
+        
+        // Sau khi quét thành công (không trùng), dừng máy quét nếu đang ở chế độ quét từng mã
+        if (scanMode === 'single' && isScanning) toggleScanner();
     }
 }
 
@@ -245,7 +250,6 @@ function processFinalScan(id, content, isOverwrite = true) {
     localStorage.setItem('nvh_scan_history', JSON.stringify(localHistory.slice(0, 50)));
     renderLocalHistory();
     saveToCloud(id, content, isOverwrite);
-    if (scanMode === 'single') toggleScanner();
 }
 
 function handleDuplicate(choice) {
@@ -255,7 +259,8 @@ function handleDuplicate(choice) {
     if (choice === 'overwrite') processFinalScan(baseId, pendingScanCode, true);
     else if (choice === 'keep') processFinalScan(baseId + getNextSuffix(baseId), pendingScanCode, false);
     
-    if (scanMode === 'single') toggleScanner(); 
+    // Máy quét đã được dừng từ lúc phát hiện trùng ở onScanSuccess.
+    // Chúng ta không gọi toggleScanner ở đây để giữ trạng thái "Bắt đầu quét" (chờ bấm nút).
     pendingScanCode = null;
 }
 
@@ -336,7 +341,7 @@ function updateScannerUI() {
     b.style.background = isScanning ? "var(--danger)" : "";
 }
 
-// --- SETTINGS v1.2.1.0 ---
+// --- SETTINGS v1.2.2.1 ---
 let currentGroup = '';
 function openSettings(g) {
     if (g === 'database' && prompt("🔐 Mật khẩu Quản trị:") !== '310824') return;

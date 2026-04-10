@@ -2,7 +2,12 @@
 
 ---
 
-## [V1.1.7.1 Beta] - 10/04/2026 (Hiện tại)
+## [V1.2.2.1] - 10/04/2026 (Hiện tại)
+- **Tinh chỉnh logic mã trùng**: Dừng máy quét ngay khi phát hiện trùng và giữ trạng thái dừng sau khi xử lý (Chờ bấm nút tiếp). Điều này tối ưu hóa luồng làm việc cho bác.
+
+## [V1.2.2.0] - 10/04/2026
+- **Diamond Cloud (Firebase)**: Nâng cấp đồng bộ dữ liệu thời gian thực.
+- **Dữ liệu lớn**: Đồng bộ 138 đơn hàng lịch sử từ file CSV.
 - **Cưỡng bức cập nhật (Cache Busting)**: Thêm tham số phiên bản vào file JS/CSS để buộc trình duyệt xóa cache cũ và nhận bản vá.
 - **Sửa lỗi hụt đơn hàng**: 
     - Bổ sung Log kỹ thuật để theo dõi dữ liệu thô từ Sheets.

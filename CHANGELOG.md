@@ -4,7 +4,14 @@ Tất cả các thay đổi quan trọng đối với dự án **TCT Scanner Pro
 
 ---
 
-## [1.1.7 Beta] - 2026-04-10
+## [1.2.2.1] - 2026-04-10
+### Fixed
+- **Logic Máy quét:** Dừng máy quét ngay khi phát hiện trùng mã và giữ trạng thái dừng sau khi người dùng chọn hành động (Ghi đè/Bản sao/Bỏ qua). Tránh việc máy quét tự khởi động lại gây phiền hà.
+
+## [1.2.2.0] - 2026-04-10
+### Added
+- **Hệ thống:** Nâng cấp Diamond Cloud (Firebase).
+- **Dữ liệu:** Đồng bộ lịch sử đơn hàng quy mô lớn.
 ### Added
 - **UI:** Thêm hiệu ứng thành công (tick ✅) cho nút Tải dữ liệu.
 ### Fixed
