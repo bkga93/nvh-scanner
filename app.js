@@ -117,15 +117,18 @@ async function toggleScanner() {
     await new Promise(r => setTimeout(r, 100)); // Nghỉ 1 nhịp
     html5QrCode = new Html5Qrcode("reader");
     
-    const config = { fps: 20, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 };
+    const config = { fps: 20, aspectRatio: 1.0 }; // Bỏ qrbox để quét toàn vùng to như khung ngoài
     
     try {
         const cameraId = localStorage.getItem('nvh_scanner_cam_id');
+        const scanConfig = cameraId ? { deviceId: cameraId } : { facingMode: "environment" };
+        
         await html5QrCode.start(
-            cameraId ? { deviceId: cameraId } : { facingMode: "environment" },
+            scanConfig,
             config,
             onScanSuccess
         );
+        
         isScanning = true;
         updateScannerUI();
     } catch (err) {
@@ -141,15 +144,23 @@ function onScanSuccess(decodedText) {
     document.getElementById('flash-overlay').classList.add('flash-active');
     setTimeout(() => document.getElementById('flash-overlay').classList.remove('flash-active'), 100);
     
-    // Phát âm thanh
-    playBeep();
+    // Kiểm tra trùng mã v1.1.9.1
+    const isDuplicate = localHistory.some(item => item.content === code);
+    
+    if (isDuplicate) {
+        showToast("⚠️ Mã này đã quét rồi!", "duplicate");
+        playDuplicateSound();
+    } else {
+        showToast("✅ Đã đẩy lên Cloud thành công!");
+        playBeep();
+    }
     
     // Lưu lịch sử máy
     const scanItem = { id: Date.now(), content: code, time: new Date().toLocaleString('vi-VN') };
     localHistory.unshift(scanItem);
     localStorage.setItem('nvh_scan_history', JSON.stringify(localHistory.slice(0, 100)));
     
-    // ĐẨY LÊN CLOUD NGAY (Firebase)
+    // ĐẨY LÊN CLOUD NGAY (Firebase) - Cập nhật/Ghi đè nếu trùng
     const orderId = extractOrderId(code);
     saveToCloud(orderId, code);
     
@@ -229,9 +240,9 @@ function updateCloudStatus(msg) {
     if (el) el.innerText = msg;
 }
 
-function showToast(msg) {
+function showToast(msg, type = "") {
     const toast = document.createElement('div');
-    toast.className = 'toast show';
+    toast.className = `toast show ${type}`;
     toast.innerText = msg;
     document.body.appendChild(toast);
     setTimeout(() => {
@@ -330,6 +341,11 @@ function activateApp() {
 
 function playBeep() {
     const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3');
+    audio.play();
+}
+
+function playDuplicateSound() {
+    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3'); // Âm báo lỗi/trùng
     audio.play();
 }
 

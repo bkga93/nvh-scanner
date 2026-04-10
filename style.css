@@ -267,6 +267,41 @@ body {
     padding: 5px 10px; cursor: pointer;
 }
 
+/* Fix Button Styles v1.1.9.1 */
+.clear-btn, .refresh-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    color: var(--primary-color);
+    font-size: 0.7rem;
+    font-weight: bold;
+    padding: 4px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    text-transform: uppercase;
+}
+
+.clear-btn:active, .refresh-btn:active {
+    background: var(--primary-color);
+    color: var(--surface-color);
+}
+
+/* Full Scan Area Fix */
+#reader__scan_region {
+    border: none !important;
+}
+#reader__scan_region canvas {
+    display: none !important;
+}
+#reader video {
+    border-radius: 24px !important;
+}
+
+/* Toast Duplicate Style */
+.toast.duplicate {
+    background: var(--danger);
+    color: white;
+}
+
 /* Toast */
 .toast {
     position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%) translateY(100px);
