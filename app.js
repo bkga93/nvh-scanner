@@ -700,7 +700,8 @@ async function fetchDataFromSheets(isAuto = false) {
         remoteDataCache = [];
         localStorage.removeItem('nvh_remote_cache');
         
-        const response = await fetch(APP_SCRIPT_URL, {
+        // ÉP TẢI MỚI TRIỆT ĐỂ (Thêm dấu thời gian vào URL để phá cache Google Sheets)
+        const response = await fetch(APP_SCRIPT_URL + "?t=" + Date.now(), {
             method: "POST",
             cache: "no-store",
             body: JSON.stringify({ action: "GET_ALL" }),
@@ -1167,7 +1168,7 @@ function previewSound(val) {
 }
 
 window.onload = () => {
-    console.log("🚀 TCT APP V1.1.7.3 - DIAMOND EDITION IS LIVE!");
+    console.log("🚀 TCT APP V1.1.7.4 - LIVE SYNC EDITION IS LIVE!");
     // Khởi tạo mặc định
     if (localStorage.getItem('nvh_sound_type') === null) {
         localStorage.setItem('nvh_sound_type', 'standard');
