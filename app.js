@@ -1,5 +1,5 @@
 // ==========================================
-// TCT SCANNER PRO V1.1.9.5 - CLOUD ERA
+// TCT SCANNER PRO V1.1.9.6 - CLOUD ERA
 // PHIÊN BẢN DIAMOND CLOUD (FIREBASE)
 // ==========================================
 
@@ -25,28 +25,26 @@ const settings = {
     firebase: JSON.parse(localStorage.getItem('nvh_firebase_config') || 'null')
 };
 
+// --- KHO ÂM THANH SIÊU THỊ (DỨT KHOÁT) ---
 const BEEP_SOUNDS = {
-    default: 'https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3',
-    modern: 'https://assets.mixkit.co/active_storage/sfx/438/438-preview.mp3',
-    cyber: 'https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3',
-    sharp: 'https://assets.mixkit.co/active_storage/sfx/2569/2569-preview.mp3',
-    gentle: 'https://assets.mixkit.co/active_storage/sfx/2570/2570-preview.mp3',
-    // V1.1.9.5 Expanded Sounds
-    laser: 'https://assets.mixkit.co/active_storage/sfx/1612/1612-preview.mp3',
-    robot: 'https://assets.mixkit.co/active_storage/sfx/2387/2387-preview.mp3',
-    ting: 'https://assets.mixkit.co/active_storage/sfx/2753/2753-preview.mp3',
-    success: 'https://assets.mixkit.co/active_storage/sfx/2188/2188-preview.mp3',
-    cash: 'https://assets.mixkit.co/active_storage/sfx/2017/2017-preview.mp3',
-    pulse: 'https://assets.mixkit.co/active_storage/sfx/2573/2573-preview.mp3',
-    pop: 'https://assets.mixkit.co/active_storage/sfx/1613/1613-preview.mp3',
-    chime: 'https://assets.mixkit.co/active_storage/sfx/2185/2185-preview.mp3',
-    magic: 'https://assets.mixkit.co/active_storage/sfx/1110/1110-preview.mp3',
-    warning: 'https://assets.mixkit.co/active_storage/sfx/997/997-preview.mp3'
+    default: 'https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3', // Siêu thị 1
+    sharp: 'https://assets.mixkit.co/active_storage/sfx/2569/2569-preview.mp3',   // Siêu thị 2
+    digital: 'https://assets.mixkit.co/active_storage/sfx/2572/2572-preview.mp3', // Kỹ thuật số
+    ting: 'https://assets.mixkit.co/active_storage/sfx/2188/2188-preview.mp3',    // Ting Ting
+    cash: 'https://assets.mixkit.co/active_storage/sfx/2017/2017-preview.mp3'     // Tiền về
+};
+
+const BEEP_NAMES = {
+    default: "Siêu thị 1 (Mặc định)",
+    sharp: "Siêu thị 2 (Đanh gọn)",
+    digital: "Âm thanh Công nghệ",
+    ting: "Tiếng Ting Ting vui vẻ",
+    cash: "Tiếng Tiền về (Siêu thị)"
 };
 
 // --- KHỞI TẠO APP ---
 window.onload = async () => {
-    console.log("🚀 TCT APP V1.1.9.5 - CLOUD ERA IS LIVE!");
+    console.log("🚀 TCT APP V1.1.9.6 - CLOUD ERA IS LIVE!");
     applyTheme(settings.theme);
     applyFontSize(settings.fontSize);
     checkActivation();
@@ -77,7 +75,6 @@ function initFirebase() {
                     ...data[key]
                 })).sort((a, b) => new Date(b.time.split(' ').reverse().join(' ')) - new Date(a.time.split(' ').reverse().join(' ')));
                 updateCloudInfoUI();
-                if (isRemoteListVisible) displayRemoteData(remoteDataCache);
             }
         });
     } catch (e) { console.error("Firebase Sync Error"); }
@@ -193,8 +190,8 @@ function showAllRemoteData() {
 
 function refreshCloudData() {
     const statusLine = document.getElementById('update-status-line');
-    statusLine.innerHTML = `<span style="color:var(--primary-color);">⏳ Đang cập nhật...</span>`;
-    const toast = showToast("⏳ Đang đồng bộ...", "info", true);
+    statusLine.innerHTML = `<span style="color:var(--primary-color);">⏳ Đang đồng bộ...</span>`;
+    const toast = showToast("⏳ Đang cập nhật từ hệ thống Cloud...", "info", true);
     setTimeout(() => {
         if (toast) toast.remove();
         statusLine.innerHTML = `✅ Cập nhật xong: <i>${new Date().toLocaleTimeString('vi-VN')}</i>`;
@@ -207,10 +204,23 @@ function updateCloudInfoUI() {
     if (btnAll) btnAll.innerText = `📊 TẤT CẢ (${remoteDataCache.length})`;
 }
 
+function filterRemoteData() {
+    const val = document.getElementById('remote-search-input').value.trim().toLowerCase();
+    const list = document.getElementById('remote-data-list');
+    
+    if (val === '') {
+        list.innerHTML = '<div class="empty-msg" style="text-align:center; padding:40px; color:var(--gray-text);"><p>Nhập mã để tìm đơn hoặc nhấn "📊 TẤT CẢ"</p></div>';
+        return;
+    }
+    
+    const filtered = remoteDataCache.filter(it => it.orderId.toLowerCase().includes(val));
+    displayRemoteData(filtered);
+}
+
 function displayRemoteData(data) {
     const list = document.getElementById('remote-data-list');
     list.innerHTML = '';
-    if (data.length === 0) { list.innerHTML = '<div class="empty-msg">Trống</div>'; return; }
+    if (data.length === 0) { list.innerHTML = '<div class="empty-msg">Không tìm thấy đơn hàng nào khớp.</div>'; return; }
     data.forEach(item => {
         const div = document.createElement('div');
         div.className = 'history-item';
@@ -224,9 +234,9 @@ function showOrderDetails(item) {
     const body = document.getElementById('order-detail-content');
     body.innerHTML = `
         <div class="detail-row"><span class="detail-label">MÃ ĐƠN HÀNG:</span><span class="detail-value">${item.orderId}</span></div>
-        <div class="detail-row"><span class="detail-label">THỜI GIAN:</span><span class="highlight-time">${item.time}</span></div>
-        <div class="detail-row"><span class="detail-label">NGƯỜI QUÉT:</span><span class="detail-value">${item.user || 'Admin'}</span></div>
-        <div class="detail-row"><span class="detail-label">NỘI DUNG:</span><span class="detail-value" style="font-size:0.75rem;">${item.content}</span></div>
+        <div class="detail-row"><span class="detail-label">THỜI GIAN QUÉT:</span><span class="highlight-time">${item.time}</span></div>
+        <div class="detail-row"><span class="detail-label">NGƯỜI VẬN HÀNH:</span><span class="detail-value">${item.user || 'Admin'}</span></div>
+        <div class="detail-row"><span class="detail-label">DỮ LIỆU ĐẦY ĐỦ:</span><span class="detail-value" style="font-size:0.75rem;">${item.content}</span></div>
     `;
     openModal('detail-modal');
 }
@@ -250,7 +260,7 @@ function updateScannerUI() {
     btn.style.color = isScanning ? "white" : "var(--surface-color)";
 }
 
-// --- CÀI ĐẶT (SETTINGS) v1.1.9.5 ---
+// --- CÀI ĐẶT (SETTINGS) v1.1.9.6 ---
 let currentSettingsGroup = '';
 function openSettings(group) {
     currentSettingsGroup = group;
@@ -260,31 +270,31 @@ function openSettings(group) {
     
     switch(group) {
         case 'audio':
-            title.innerText = "KHO ÂM THANH & RUNG";
+            title.innerText = "ÂM THANH & RUNG";
             let soundOptions = '';
             Object.keys(BEEP_SOUNDS).forEach(key => {
-                soundOptions += `<option value="${key}" ${settings.beepType===key?'selected':''}>${key.toUpperCase()}</option>`;
+                soundOptions += `<option value="${key}" ${settings.beepType===key?'selected':''}>${BEEP_NAMES[key]}</option>`;
             });
             body.innerHTML = `
                 <div class="settings-group">
-                    <label class="settings-label">Kiểu tiếng bíp (Pullbox):</label>
+                    <label class="settings-label">Kiểu tiếng bíp siêu thị:</label>
                     <select id="set-beep-type" class="settings-select">
                         ${soundOptions}
                     </select>
                 </div>
                 <div class="toggle-container">
-                    <span>Rung khi thành công:</span>
+                    <span>Chế độ Rung khi thành công:</span>
                     <label class="switch"><input type="checkbox" id="set-vibrate" ${settings.vibrate?'checked':''}><span class="slider"></span></label>
                 </div>
-                <button class="pc-action-btn" style="margin-top:20px; padding:15px; font-size:1rem;" onclick="testBeep()">🔊 NGHE THỬ</button>
+                <button class="pc-action-btn" style="margin-top:20px; padding:15px; font-size:1rem;" onclick="testBeep()">🔊 NGHE THỬ TIẾNG BÍP</button>
             `;
             break;
         case 'user':
-            title.innerText = "THÔNG TIN CÁ NHÂN";
+            title.innerText = "THÔNG TIN NGƯỜI DÙNG";
             body.innerHTML = `
                 <div class="settings-group">
-                    <label class="settings-label">Tên người vận hành:</label>
-                    <input type="text" id="set-user-name" class="settings-input" value="${settings.userName}" placeholder="Nhập tên bác...">
+                    <label class="settings-label">Tên nhân viên / Máy quét:</label>
+                    <input type="text" id="set-user-name" class="settings-input" value="${settings.userName}" placeholder="Nhập tên của bác...">
                 </div>
             `;
             break;
@@ -292,26 +302,26 @@ function openSettings(group) {
             title.innerText = "GIAO DIỆN & HIỂN THỊ";
             body.innerHTML = `
                 <div class="settings-group">
-                    <label class="settings-label">Bộ màu chủ đề (Theme):</label>
+                    <label class="settings-label">Chọn bộ màu (Themes):</label>
                     <select id="set-theme" class="settings-select">
-                        <optgroup label="Của Tối (Dark)">
+                        <optgroup label="Chủ đề Tối (Sang trọng)">
                             <option value="plum-gold" ${settings.theme==='plum-gold'?'selected':''}>Tím Gold (Gốc)</option>
-                            <option value="midnight" ${settings.theme==='midnight'?'selected':''}>Midnight Cyan</option>
-                            <option value="ruby" ${settings.theme==='ruby'?'selected':''}>Onyx Ruby</option>
-                            <option value="emerald" ${settings.theme==='emerald'?'selected':''}>Forest Emerald</option>
-                            <option value="silver" ${settings.theme==='silver'?'selected':''}>Slate Silver</option>
+                            <option value="midnight" ${settings.theme==='midnight'?'selected':''}>Xanh Midnight</option>
+                            <option value="ruby" ${settings.theme==='ruby'?'selected':''}>Đỏ Ruby</option>
+                            <option value="emerald" ${settings.theme==='emerald'?'selected':''}>Xanh Emerald</option>
+                            <option value="silver" ${settings.theme==='silver'?'selected':''}>Xám Bạc</option>
                         </optgroup>
-                        <optgroup label="Cửa Sáng (Light)">
-                            <option value="light-blue" ${settings.theme==='light-blue'?'selected':''}>Trắng Blue</option>
+                        <optgroup label="Chủ đề Sáng (Trang nhã)">
+                            <option value="light-blue" ${settings.theme==='light-blue'?'selected':''}>Trắng Xanh</option>
                             <option value="light-sepia" ${settings.theme==='light-sepia'?'selected':''}>Kem Sepia</option>
-                            <option value="light-lavender" ${settings.theme==='light-lavender'?'selected':''}>Oải hương</option>
-                            <option value="light-sky" ${settings.theme==='light-sky'?'selected':''}>Bầu trời</option>
+                            <option value="light-lavender" ${settings.theme==='light-lavender'?'selected':''}>Tím Oải hương</option>
+                            <option value="light-sky" ${settings.theme==='light-sky'?'selected':''}>Cam Bầu trời</option>
                         </optgroup>
                     </select>
                 </div>
                 <div class="settings-group">
-                    <label class="settings-label">Độ lớn chữ (%):</label>
-                    <input type="range" id="set-font-size" min="80" max="150" value="${settings.fontSize}" style="width:100%">
+                    <label class="settings-label">Điều chỉnh cỡ chữ: (${settings.fontSize}%)</label>
+                    <input type="range" id="set-font-size" min="80" max="150" value="${settings.fontSize}" style="width:100%" oninput="this.nextElementSibling.innerText = this.value + '%'">
                     <div style="text-align:right; font-size:0.75rem;">${settings.fontSize}%</div>
                 </div>
             `;
@@ -339,7 +349,7 @@ function saveSettings() {
         applyTheme(settings.theme);
         applyFontSize(settings.fontSize);
     }
-    showToast("💾 Lưu thành công!");
+    showToast("💾 Lưu cài đặt thành công!");
     closeModal('settings-modal');
 }
 
@@ -352,7 +362,7 @@ function testBeep() {
 }
 
 function playBeep() { new Audio(BEEP_SOUNDS[settings.beepType] || BEEP_SOUNDS.default).play().catch(()=>{}); }
-function playDuplicateSound() { new Audio(BEEP_SOUNDS.cyber).play().catch(()=>{}); }
+function playDuplicateSound() { new Audio(BEEP_SOUNDS.digital).play().catch(()=>{}); }
 
 // --- KHÁC ---
 function toggleDrawer(show) {
@@ -368,8 +378,8 @@ function activateApp() {
     if (document.getElementById('activation-key').value === '310824') {
         localStorage.setItem('nvh_activated', 'true');
         closeModal('activation-overlay');
-        showToast("💎 ĐÃ KÍCH HOẠT V1.1.9.5!");
-    } else { alert("Sai Key!"); }
+        showToast("💎 ĐÃ KÍCH HOẠT V1.1.9.6!");
+    } else { alert("Sai Key kích hoạt!"); }
 }
 
 function showToast(msg, type = "", persistent = false) {
