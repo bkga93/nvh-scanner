@@ -1158,6 +1158,7 @@ function previewSound(val) {
 }
 
 window.onload = () => {
+    console.log("🚀 TCT APP V1.1.7.2 - DIAMOND EDITION IS LIVE!");
     // Khởi tạo mặc định
     if (localStorage.getItem('nvh_sound_type') === null) {
         localStorage.setItem('nvh_sound_type', 'standard');
