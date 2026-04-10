@@ -469,8 +469,8 @@ function processValidScan(decodedText, action = 'APPEND') {
 
         const orderData = {
             id: trackingData.id || Date.now(),
-            orderId: decodedText.length > 5 ? decodedText : "NVH-" + Math.random().toString(36).substr(2, 6).toUpperCase(),
-            content: decodedText,
+            orderId: (decodedText && decodedText.length > 5) ? decodedText : "NVH-" + Math.random().toString(36).substr(2, 6).toUpperCase(),
+            content: decodedText || '--- ERR ---', // Tránh để trống gây lỗi
             scanTime: trackingData.startTime || formatDate(new Date()),
             endTime: trackingData.endTime || '',
             evidenceImage: trackingData.snapshot || '',
@@ -739,32 +739,34 @@ async function fetchDataFromSheets(isAuto = false) {
                 return item;
             });
 
-            // 1. Lọc dữ liệu trong vòng 30 ngày (1 tháng) theo yêu cầu
-            const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+            // 1. TẠM THỜI BỎ BỘ LỌC 30 NGÀY ĐỂ KIỂM TRA DỮ LIỆU (v1.1.7.6)
             const filteredByDate = data.filter(item => {
-                if (!item.scanTime) return false;
-                const itemDate = parseDate(item.scanTime);
-                return itemDate.getTime() >= thirtyDaysAgo;
+                if (!item.scanTime && !item.content) return false;
+                return true; // Chấp nhận tất cả để xác minh kết nối
             });
             
-            console.log(`📅 Sau khi lọc 30 ngày: ${filteredByDate.length} dòng.`);
+            console.log(`📅 Nhận được: ${filteredByDate.length} dòng từ Sheets.`);
 
             // 2. Loại bỏ trùng lặp dựa trên Mã đơn hàng (content) - Giữ bản ghi mới nhất
             const uniqueMap = new Map();
             filteredByDate.forEach(item => {
+                if (!item.content) return;
                 const existing = uniqueMap.get(item.content);
-                if (!existing || parseDate(item.scanTime) > parseDate(existing.scanTime)) {
+                const itemTime = parseDate(item.scanTime).getTime();
+                const existingTime = existing ? parseDate(existing.scanTime).getTime() : 0;
+                
+                if (!existing || itemTime > existingTime) {
                     uniqueMap.set(item.content, item);
                 }
             });
             data = Array.from(uniqueMap.values());
-            console.log(`✨ Sau khi bỏ trùng lặp: ${data.length} dòng.`);
-            if (data.length <= 5) {
-                console.log("Danh sách cuối cùng để hiển thị:", JSON.stringify(data.map(d => d.content)));
-            }
-
-            // Sắp xếp lại theo thời gian mới nhất lên đầu
-            data.sort((a, b) => parseDate(b.scanTime) - parseDate(a.scanTime));
+            
+            // Sắp xếp lại theo thời gian mới nhất lên đầu (Phòng thủ lỗi parseDate)
+            data.sort((a, b) => {
+                try {
+                    return parseDate(b.scanTime).getTime() - parseDate(a.scanTime).getTime();
+                } catch(e) { return 0; }
+            });
         }
 
         remoteDataCache = data;
@@ -797,7 +799,7 @@ async function fetchDataFromSheets(isAuto = false) {
         console.error("Fetch error:", error);
         if (!isAuto) {
             hideToast();
-            showToast("❌ Lỗi tải dữ liệu. Vui lòng thử lại!");
+            showToast(`❌ Lỗi tải: ${error.message}. Vui lòng thử lại!`, 7000);
         }
     } finally {
         if (btn) btn.classList.remove('refreshing');
@@ -1174,7 +1176,7 @@ function previewSound(val) {
 }
 
 window.onload = () => {
-    console.log("🚀 TCT APP V1.1.7.5 - STABLE SYNC IS LIVE!");
+    console.log("🚀 TCT APP V1.1.7.6 - EMERGENCY FIX IS LIVE!");
     // Khởi tạo mặc định
     if (localStorage.getItem('nvh_sound_type') === null) {
         localStorage.setItem('nvh_sound_type', 'standard');
