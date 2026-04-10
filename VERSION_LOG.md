@@ -2,7 +2,10 @@
 
 ---
 
-## [V1.2.2.2] - 10/04/2026 (Hiện tại)
+## [V1.2.2.3] - 10/04/2026 (Hiện tại)
+- **Cài đặt Database**: Bổ sung mốc dọn dẹp chủ động (3 tháng, 6 tháng, 1 năm).
+
+## [V1.2.2.2] - 10/04/2026
 - **Bảo mật truy cập**: Khôi phục yêu cầu mật khẩu (`310824`) cho lần vào app đầu tiên trên thiết bị mới.
 - **Tên thiết bị tự động**: Tự nhận diện "iPhone", "Android", "Windows"... nếu bác chưa đặt tên người dùng.
 - **Lưu trữ nâng cao**: Thêm mốc lưu trữ 6 tháng và 1 năm cho dữ liệu Cloud.

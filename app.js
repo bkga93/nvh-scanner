@@ -1,4 +1,4 @@
-// TCT SCANNER PRO V1.2.2.2 - CLOUD ERA
+// TCT SCANNER PRO V1.2.2.3 - CLOUD ERA
 // PHIÊN BẢN DIAMOND CLOUD (FIREBASE)
 // ==========================================
 
@@ -64,7 +64,7 @@ const BEEP_NAMES = {
 
 // --- KHỞI TẠO APP ---
 window.onload = async () => {
-    console.log("🚀 TCT APP V1.2.2.2 - CLOUD ERA IS LIVE!");
+    console.log("🚀 TCT APP V1.2.2.3 - CLOUD ERA IS LIVE!");
     applyTheme(settings.theme);
     applyFontSize(settings.fontSize);
     checkActivation(); // Kiểm tra Activation và Mật khẩu truy cập
@@ -350,7 +350,7 @@ function updateScannerUI() {
     b.style.background = isScanning ? "var(--danger)" : "";
 }
 
-// --- SETTINGS v1.2.2.2 ---
+// --- SETTINGS v1.2.2.3 ---
 let currentGroup = '';
 function openSettings(g) {
     if (g === 'database' && prompt("🔐 Mật khẩu Quản trị:") !== '310824') return;
@@ -408,6 +408,9 @@ function openSettings(g) {
                         <option value="10" selected>Cũ hơn 10 ngày</option>
                         <option value="15">Cũ hơn 15 ngày</option>
                         <option value="30">Cũ hơn 30 ngày</option>
+                        <option value="90">Cũ hơn 3 tháng</option>
+                        <option value="180">Cũ hơn 6 tháng</option>
+                        <option value="365">Cũ hơn 1 năm</option>
                     </select>
                     <button class="pc-action-btn" style="background:var(--danger); font-size:0.8rem;" onclick="runManualCleanup()">XÓA ĐƠN QUÁ HẠN</button>
                 </div>

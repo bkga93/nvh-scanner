@@ -4,6 +4,10 @@ Tất cả các thay đổi quan trọng đối với dự án **TCT Scanner Pro
 
 ---
 
+## [1.2.2.3] - 2026-04-10
+### Added
+- **UI:** Bổ sung lựa chọn dọn dẹp dữ liệu chủ động (3 tháng, 6 tháng, 1 năm).
+
 ## [1.2.2.2] - 2026-04-10
 ### Added
 - **Hệ thống:** Khôi phục Mật khẩu Truy cập (`nvh_auth_skip`) khi vào ứng dụng.
