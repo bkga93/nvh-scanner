@@ -1,5 +1,5 @@
 // ==========================================
-// TCT SCANNER PRO V1.1.9.8 - CLOUD ERA
+// TCT SCANNER PRO V1.1.9.9 - CLOUD ERA
 // PHIÊN BẢN DIAMOND CLOUD (FIREBASE)
 // ==========================================
 
@@ -12,14 +12,14 @@ let remoteDataCache = [];
 let database = null;
 let pendingScanCode = null; 
 let isRemoteListVisible = false;
-let lastScanTracker = { code: '', time: 0 }; // Chống rung cho quét liên tục
+let lastScanTracker = { code: '', time: 0 }; 
 
 // --- CÀI ĐẶT NGƯỜI DÙNG ---
 const settings = {
     userName: localStorage.getItem('nvh_user_name') || 'Admin',
     beepType: localStorage.getItem('nvh_beep_type') || 'default',
     vibrate: localStorage.getItem('nvh_vibrate') === 'true',
-    voiceEnabled: localStorage.getItem('nvh_voice_enabled') !== 'false', // Mặc định bật
+    voiceEnabled: localStorage.getItem('nvh_voice_enabled') !== 'false', 
     theme: localStorage.getItem('nvh_theme') || 'plum-gold',
     fontSize: localStorage.getItem('nvh_font_size') || '100',
     retention: localStorage.getItem('nvh_data_retention') || 'all',
@@ -53,14 +53,13 @@ const BEEP_NAMES = {
 
 // --- KHỞI TẠO APP ---
 window.onload = async () => {
-    console.log("🚀 TCT APP V1.1.9.8 - CLOUD ERA IS LIVE!");
+    console.log("🚀 TCT APP V1.1.9.9 - CLOUD ERA IS LIVE!");
     applyTheme(settings.theme);
     applyFontSize(settings.fontSize);
     checkActivation();
     initFirebase();
     renderLocalHistory();
     
-    // Đồng bộ radio mode
     document.querySelectorAll('input[name="scanMode"]').forEach(radio => {
         radio.addEventListener('change', (e) => { scanMode = e.target.value; });
     });
@@ -120,12 +119,42 @@ function clearAllCloudData() {
         const toast = showToast("🔄 Đang dọn dẹp Cloud...", "info", true);
         database.ref('scans').set(null).then(() => {
             if (toast) toast.remove();
-            remoteDataCache = []; // Cập nhật tức thì
+            remoteDataCache = []; 
             updateCloudInfoUI();
             displayRemoteData([]);
             showToast("🔥 Đã xóa sạch Cloud!");
             closeModal('settings-modal');
         });
+    }
+}
+
+function runManualCleanup() {
+    if (!database) return;
+    const days = parseInt(document.getElementById('set-manual-retention').value);
+    const now = new Date();
+    let count = 0;
+    
+    if (confirm(`🧹 Bác có chắc chắn muốn xóa tất cả đơn hàng cũ hơn ${days} ngày không?`)) {
+        const toast = showToast(`⏳ Đang tìm và xóa đơn cũ (> ${days} ngày)...`, "info", true);
+        
+        const updates = {};
+        remoteDataCache.forEach(item => {
+            const itemDate = parseTime(item.time);
+            if ((now - itemDate) / (1000 * 60 * 60 * 24) > days) {
+                updates[item.orderId] = null;
+                count++;
+            }
+        });
+
+        if (count > 0) {
+            database.ref('scans').update(updates).then(() => {
+                if (toast) toast.remove();
+                showToast(`✅ Đã xóa thành công ${count} đơn hàng!`);
+            });
+        } else {
+            if (toast) toast.remove();
+            showToast("ℹ️ Không tìm thấy đơn hàng nào quá hạn.");
+        }
     }
 }
 
@@ -169,10 +198,8 @@ function onScanSuccess(decodedText) {
     const code = decodedText.trim();
     if (!code) return;
 
-    // Chống rung cho Quét liên tục (2 giây cho cùng 1 mã)
     const now = Date.now();
     if (scanMode === 'continuous' && code === lastScanTracker.code && (now - lastScanTracker.time < 2000)) return;
-    
     lastScanTracker = { code: code, time: now };
 
     document.getElementById('flash-overlay').classList.add('flash-active');
@@ -227,7 +254,7 @@ function handleDuplicate(choice) {
     if (choice === 'overwrite') processFinalScan(baseId, pendingScanCode, true);
     else if (choice === 'keep') processFinalScan(baseId + getNextSuffix(baseId), pendingScanCode, false);
     
-    if (scanMode === 'single') toggleScanner(); // Restart if single
+    if (scanMode === 'single') toggleScanner(); 
     pendingScanCode = null;
 }
 
@@ -308,7 +335,7 @@ function updateScannerUI() {
     b.style.background = isScanning ? "var(--danger)" : "";
 }
 
-// --- SETTINGS v1.1.9.8 ---
+// --- SETTINGS v1.1.9.9 ---
 let currentGroup = '';
 function openSettings(g) {
     if (g === 'database' && prompt("🔐 Mật khẩu Quản trị:") !== '310824') return;
@@ -326,7 +353,7 @@ function openSettings(g) {
                 <div class="settings-group"><label class="settings-label">Tiếng bíp siêu thị:</label><select id="set-beep-type" class="settings-select">${opts}</select></div>
                 <div class="toggle-container"><span>Thông báo Giọng nói (VN):</span><label class="switch"><input type="checkbox" id="set-voice" ${settings.voiceEnabled?'checked':''}><span class="slider"></span></label></div>
                 <div class="toggle-container"><span>Rung máy:</span><label class="switch"><input type="checkbox" id="set-vibrate" ${settings.vibrate?'checked':''}><span class="slider"></span></label></div>
-                <button class="pc-action-btn" style="margin-top:10px; padding:12px; font-size:0.9rem;" onclick="testBeep()">🔊 THỬ TIẾNG BÍP</button>
+                <button class="pc-action-btn" style="margin-top:20px; padding:15px; font-size:1rem;" onclick="testBeep()">📻 THỬ TIẾNG BÍP + NÓI</button>
             `;
             break;
         case 'user':
@@ -350,14 +377,24 @@ function openSettings(g) {
         case 'database':
             t.innerText = "CƠ SỞ DỮ LIỆU";
             b.innerHTML = `
-                <div class="settings-group"><label class="settings-label">Giữ dữa liệu trong:</label>
+                <div class="settings-group"><label class="settings-label">Thời gian lưu trữ (Tự động):</label>
                     <select id="set-retention" class="settings-select">
-                        <option value="7" ${settings.retention==='7'?'selected':''}>7 ngày</option>
-                        <option value="30" ${settings.retention==='30'?'selected':''}>30 ngày</option>
+                        <option value="7" ${settings.retention==='7'?'selected':''}>Giữ lại 7 ngày</option>
+                        <option value="30" ${settings.retention==='30'?'selected':''}>Giữ lại 30 ngày</option>
                         <option value="all" ${settings.retention==='all'?'selected':''}>Vĩnh viễn</option>
                     </select>
                 </div>
-                <button class="admin-action-btn" onclick="clearAllCloudData()">🔥 XÓA TẤT CẢ CLOUD</button>
+                <div class="admin-cleanup-box">
+                    <label class="settings-label">🧹 Dọn dẹp chủ động đơn cũ:</label>
+                    <select id="set-manual-retention" class="settings-select" style="margin-bottom:10px;">
+                        <option value="7">Cũ hơn 7 ngày</option>
+                        <option value="10" selected>Cũ hơn 10 ngày</option>
+                        <option value="15">Cũ hơn 15 ngày</option>
+                        <option value="30">Cũ hơn 30 ngày</option>
+                    </select>
+                    <button class="pc-action-btn" style="background:var(--danger); font-size:0.8rem;" onclick="runManualCleanup()">XÓA ĐƠN QUÁ HẠN</button>
+                </div>
+                <button class="admin-action-btn" style="background:var(--danger); color:white; padding:15px; border-radius:12px; border:none; width:100%; font-weight:800; margin-top:20px;" onclick="clearAllCloudData()">🔥 XÓA TẤT CẢ DỮ LIỆU CLOUD</button>
             `;
             break;
     }
@@ -391,7 +428,12 @@ function saveSettings() {
 
 function applyTheme(t) { document.body.dataset.theme = t; }
 function applyFontSize(s) { document.documentElement.style.fontSize = (s / 100) * 16 + 'px'; }
-function testBeep() { new Audio(BEEP_SOUNDS[document.getElementById('set-beep-type').value]).play(); }
+function testBeep() { 
+    new Audio(BEEP_SOUNDS[document.getElementById('set-beep-type').value]).play(); 
+    if (document.getElementById('set-voice').checked) {
+        setTimeout(() => speakSuccess(), 500);
+    }
+}
 function playBeep() { new Audio(BEEP_SOUNDS[settings.beepType] || BEEP_SOUNDS.default).play(); }
 function playDuplicateSound() { new Audio(BEEP_SOUNDS.short4).play(); }
 
