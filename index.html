@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TCT Scanner Pro V1.1.7 Beta | Diamond Edition</title>
-    <link rel="stylesheet" href="style.css">
+    <title>TCT Scanner Pro V1.1.7.1 Beta | Diamond Edition</title>
+    <link rel="stylesheet" href="style.css?v=1.1.7.1">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2D0B2D">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -298,7 +298,7 @@
         </div>
 
         <footer class="footer">
-            <span class="copyright">Thực hiện bởi <i>NVH</i> — V1.1.7 Beta</span>
+            <span class="copyright">Thực hiện bởi <i>NVH</i> — V1.1.7.1 Beta</span>
         </footer>
     </div>
 
@@ -352,7 +352,7 @@
         </div>
 
         <div class="drawer-footer">
-            <div class="version-info">NVH Scanner Pro — V1.1.7 Beta</div>
+            <div class="version-info">NVH Scanner Pro — V1.1.7.1 Beta</div>
         </div>
     </div>
 
@@ -500,6 +500,13 @@
         <div id="tmpl-changelog">
             <div class="changelog-container">
                 <div class="changelog-list">
+                    <div class="changelog-item">
+                        <span class="ver-tag">V1.1.7.1 Beta</span>
+                        <ul>
+                            <li><b>Cache:</b> Cưỡng bức làm mới trình duyệt (Cache Busting) để nhận bản cập nhật mới nhất.</li>
+                            <li><b>Logging:</b> Bổ sung log kỹ thuật để kiểm tra đơn hàng nhập tay.</li>
+                        </ul>
+                    </div>
                     <div class="changelog-item">
                         <span class="ver-tag">V1.1.7 Beta</span>
                         <ul>
@@ -750,13 +757,14 @@
             </div>
             <button class="btn-activate-gold" onclick="activateApp()">KÍCH HOẠT DIAMOND EDITION</button>
             <p id="activation-error" class="gold-error" style="display: none;">Key kích hoạt không chính xác!</p>
-            <div class="activation-footer-gold">TCT Scanner Pro — V1.1.7 Beta</div>
+            <div class="activation-footer-gold">TCT Scanner Pro — V1.1.7.1 Beta</div>
         </div>
     </div>
 
     <!-- Toast Notification -->
     <div id="toast" class="toast"></div>
 
-    <script src="app.js"></script>
+    <!-- Thêm version vào app.js để bust cache -->
+    <script src="app.js?v=1.1.7.1"></script>
 </body>
 </html>

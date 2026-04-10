@@ -701,6 +701,10 @@ async function fetchDataFromSheets(isAuto = false) {
         
         if (data && Array.isArray(data)) {
             console.log(`📥 Tổng dữ liệu nhận về từ Sheets: ${data.length} dòng.`);
+            if (data.length > 0) {
+                console.log("Dòng đầu tiên (Raw):", JSON.stringify(data[0]));
+                console.log("Dòng cuối cùng (Raw):", JSON.stringify(data[data.length - 1]));
+            }
             
             // 0. CHUẨN HÓA DỮ LIỆU (Normalization) v1.1.4
             // Chuyển mảng 2D (nếu có) sang Object để code có thể đọc được key .scanTime
@@ -745,6 +749,9 @@ async function fetchDataFromSheets(isAuto = false) {
             });
             data = Array.from(uniqueMap.values());
             console.log(`✨ Sau khi bỏ trùng lặp: ${data.length} dòng.`);
+            if (data.length <= 5) {
+                console.log("Danh sách cuối cùng để hiển thị:", JSON.stringify(data.map(d => d.content)));
+            }
 
             // Sắp xếp lại theo thời gian mới nhất lên đầu
             data.sort((a, b) => parseDate(b.scanTime) - parseDate(a.scanTime));

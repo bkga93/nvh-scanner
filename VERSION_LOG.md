@@ -2,14 +2,15 @@
 
 ---
 
-## [V1.1.7 Beta] - 10/04/2026 (Hiện tại)
-- **Sửa lỗi Crash hệ thống**: Khắc phục việc thiếu hàm `updateLastUpdateTimeDisplay` gây treo ứng dụng khi đồng bộ dữ liệu. Đây là nguyên nhân khiến một số đơn hàng mới không hiển thị.
-- **Nâng cấp UI Đồng bộ**:
-    - Nút Tải dữ liệu đổi trạng thái sang **✅ ĐÃ XONG** màu xanh sau khi tải thành công.
-    - Cập nhật dòng trạng thái chi tiết: `Đã tải [X] đơn lúc [Giờ]`.
-- **Cải thiện UX**: Tăng thời gian hiển thị Toast thông báo lên 5 giây.
+## [V1.1.7.1 Beta] - 10/04/2026 (Hiện tại)
+- **Cưỡng bức cập nhật (Cache Busting)**: Thêm tham số phiên bản vào file JS/CSS để buộc trình duyệt xóa cache cũ và nhận bản vá.
+- **Sửa lỗi hụt đơn hàng**: 
+    - Bổ sung Log kỹ thuật để theo dõi dữ liệu thô từ Sheets.
+    - Đảm bảo logic không bị đứng hình khi xử lý dữ liệu nhập tay.
 
 ---
+
+## [V1.1.7 Beta] - 10/04/2026
 
 ## [V1.1.6 Beta] - 10/04/2026
 
