@@ -157,25 +157,32 @@ body {
     padding: 15px;
     border-radius: 16px;
     border: 1px solid rgba(255, 215, 0, 0.1);
-    margin: 15px 0;
+    margin: 10px 0;
 }
 
 .status-label { font-size: 0.75rem; color: var(--gray-text); display: block; margin-bottom: 5px; }
-.status-value { font-size: 1.4rem; font-weight: 900; color: var(--primary-color); word-break: break-all; }
+.status-value { font-size: 1.2rem; font-weight: 900; color: var(--primary-color); word-break: break-all; }
 
 /* Buttons */
 .pc-action-btn, .view-all-btn, .download-btn-main, .modal-btn {
     width: 100%;
-    padding: 15px;
+    padding: 20px; /* Tăng kích thước nút */
     border-radius: 14px;
     border: none;
     background-color: var(--primary-color);
     color: var(--surface-color);
     font-weight: 800;
-    font-size: 0.9rem;
+    font-size: 1rem; /* Tăng font chữ */
     cursor: pointer;
     transition: all 0.2s;
-    box-shadow: 0 5px 15px rgba(255, 215, 0, 0.2);
+    box-shadow: 0 5px 15px rgba(255, 215, 0, 0.3);
+}
+
+.controls-container {
+    margin-top: 35px; /* Đẩy nút xuống xa khung quét */
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
 
 .pc-action-btn:active, .modal-btn:active { transform: scale(0.97); }
@@ -186,7 +193,7 @@ body {
     top: 0; left: -100%;
     width: 80%; max-width: 320px; height: 100%;
     background: linear-gradient(135deg, var(--surface-color), #3d0e3d);
-    z-index: 2500;
+    z-index: 11000; /* Tăng z-index để không bị overlay đè */
     transition: left 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
     display: flex;
     flex-direction: column;
@@ -226,13 +233,44 @@ body {
     z-index: 10000; backdrop-filter: blur(5px);
 }
 
+#drawer-overlay {
+    z-index: 10500; /* Sidebar overlay nằm dưới sidebar nhưng trên app */
+}
+
 .modal-content {
     background: var(--surface-color);
     width: 90%; max-width: 380px;
     padding: 25px; border-radius: 24px;
     border: 2px solid var(--primary-color);
     text-align: center;
+    max-height: 90vh;
+    overflow-y: auto;
 }
+
+.duplicate-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.btn-overwrite { background: var(--danger) !important; color: white !important; }
+.btn-keep { background: var(--success) !important; color: var(--surface-color) !important; }
+.btn-skip { background: var(--gray-text) !important; color: var(--surface-color) !important; }
+
+/* Detail View */
+.detail-info {
+    text-align: left;
+    margin-top: 15px;
+}
+.detail-row {
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.detail-label { font-size: 0.7rem; color: var(--gray-text); display: block; }
+.detail-value { font-size: 1rem; color: white; font-weight: 600; }
+.highlight-time { font-size: 1.4rem; color: var(--primary-color); font-weight: 800; display: block; margin-top: 5px; }
 
 /* History List Layout */
 .history-item {

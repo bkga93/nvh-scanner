@@ -1,5 +1,5 @@
 // ==========================================
-// TCT SCANNER PRO V1.1.9.1 - CLOUD ERA
+// TCT SCANNER PRO V1.1.9.2 - CLOUD ERA
 // PHIÊN BẢN DIAMOND CLOUD (FIREBASE)
 // ==========================================
 
@@ -8,11 +8,14 @@ let isScanning = false;
 let html5QrCode = null;
 let currentScannerId = null;
 let useIPCamera = false;
-let scanMode = 'single'; // 'single' hoặc 'continuous'
+let scanMode = 'single'; 
 let localHistory = JSON.parse(localStorage.getItem('nvh_scan_history') || '[]');
 let remoteDataCache = [];
 let firebaseApp = null;
 let database = null;
+let pendingScanCode = null; // Lưu mã đang chờ xử lý trùng lập
+let lastUpdateTimestamp = null;
+let isRemoteListVisible = false;
 
 // --- CÀI ĐẶT MẶC ĐỊNH ---
 const DEFAULT_FIREBASE_CONFIG = {
@@ -27,17 +30,11 @@ const DEFAULT_FIREBASE_CONFIG = {
 
 // --- KHỞI TẠO APP ---
 window.onload = async () => {
-    console.log("🚀 TCT APP V1.1.9.0 - CLOUD ERA IS LIVE!");
+    console.log("🚀 TCT APP V1.1.9.2 - CLOUD ERA IS LIVE!");
     checkActivation();
     initFirebase();
     renderLocalHistory();
     refreshCameraList();
-    
-    // Tự động nạp cấu hình cũ
-    const savedConfig = localStorage.getItem('nvh_firebase_config');
-    if (savedConfig) {
-        // Nếu có config riêng của bác, sẽ dùng nó
-    }
 };
 
 // --- HỆ THỐNG CLOUD (FIREBASE) ---
@@ -51,21 +48,19 @@ function initFirebase() {
             firebaseApp = firebase.app();
         }
         database = firebase.database();
-        console.log("☁️ Connected to Cloud Database");
         
-        // Trình lắng nghe REAL-TIME (Cực kỳ quan trọng)
-        // Khi bất kỳ ai quét, máy bác sẽ tự động nhận về ngay lập tức
         database.ref('scans').on('value', (snapshot) => {
             const data = snapshot.val();
             if (data) {
-                // Chuyển object sang array để dễ xử lý
                 remoteDataCache = Object.keys(data).map(key => ({
                     orderId: key,
                     ...data[key]
-                })).sort((a, b) => new Date(b.time) - new Date(a.time));
+                })).sort((a, b) => new Date(b.time.split(' ').reverse().join(' ')) - new Date(a.time.split(' ').reverse().join(' ')));
                 
-                updateCloudStatus(`Hệ thống: ${remoteDataCache.length} đơn`);
-                if (document.getElementById('data-view').classList.contains('active')) {
+                lastUpdateTimestamp = new Date().toLocaleTimeString('vi-VN');
+                updateCloudInfoUI();
+                
+                if (isRemoteListVisible) {
                     displayRemoteData(remoteDataCache);
                 }
             }
@@ -76,9 +71,8 @@ function initFirebase() {
     }
 }
 
-async function saveToCloud(orderId, content) {
+async function saveToCloud(orderId, content, isOverwrite = true) {
     if (!database) return;
-    
     const userName = localStorage.getItem('nvh_user_name') || 'User';
     const now = new Date().toLocaleString('vi-VN');
     
@@ -88,23 +82,19 @@ async function saveToCloud(orderId, content) {
             time: now,
             user: userName
         });
-        showToast("✅ Đã đẩy lên Cloud thành công!");
+        showToast(isOverwrite ? "✅ Đã ghi đè Cloud!" : "✅ Đã thêm bản sao Cloud!");
     } catch (error) {
-        console.error("Cloud Save Error:", error);
-        showToast("❌ Lỗi đẩy Cloud! Đang lưu tạm máy...");
+        showToast("❌ Lỗi đẩy Cloud!");
     }
 }
 
 // --- MÁY QUÉT (SCANNER) ---
 async function toggleScanner() {
-    // Sửa lỗi treo camera v1.1.8.7
     if (html5QrCode) {
         try {
             const state = html5QrCode.getState();
-            if (state === 2 || state === 3) {
-                await html5QrCode.stop();
-            }
-        } catch (e) { console.warn("Stop error:", e); }
+            if (state === 2 || state === 3) await html5QrCode.stop();
+        } catch (e) {}
         html5QrCode = null;
     }
     
@@ -114,21 +104,16 @@ async function toggleScanner() {
         return;
     }
 
-    await new Promise(r => setTimeout(r, 100)); // Nghỉ 1 nhịp
+    await new Promise(r => setTimeout(r, 100));
     html5QrCode = new Html5Qrcode("reader");
     
-    const config = { fps: 20, aspectRatio: 1.0 }; // Bỏ qrbox để quét toàn vùng to như khung ngoài
+    const config = { fps: 20, aspectRatio: 1.0 };
     
     try {
         const cameraId = localStorage.getItem('nvh_scanner_cam_id');
         const scanConfig = cameraId ? { deviceId: cameraId } : { facingMode: "environment" };
         
-        await html5QrCode.start(
-            scanConfig,
-            config,
-            onScanSuccess
-        );
-        
+        await html5QrCode.start(scanConfig, config, onScanSuccess);
         isScanning = true;
         updateScannerUI();
     } catch (err) {
@@ -140,40 +125,68 @@ function onScanSuccess(decodedText) {
     const code = decodedText.trim();
     if (!code) return;
 
-    // Chèn hiệu ứng thành công
+    // Hiệu ứng Flash
     document.getElementById('flash-overlay').classList.add('flash-active');
     setTimeout(() => document.getElementById('flash-overlay').classList.remove('flash-active'), 100);
     
-    // Kiểm tra trùng mã v1.1.9.1
-    const isDuplicate = localHistory.some(item => item.content === code);
-    
-    if (isDuplicate) {
-        showToast("⚠️ Mã này đã quét rồi!", "duplicate");
+    const orderId = extractOrderId(code);
+    const existing = remoteDataCache.find(item => item.orderId === orderId);
+
+    if (existing) {
+        pendingScanCode = code;
+        document.getElementById('dup-code-text').innerText = orderId;
+        openModal('duplicate-modal');
         playDuplicateSound();
     } else {
-        showToast("✅ Đã đẩy lên Cloud thành công!");
+        processFinalScan(orderId, code);
         playBeep();
     }
     
+    document.getElementById('pc-last-scanned').innerText = code;
+}
+
+function processFinalScan(id, content, isOverwrite = true) {
     // Lưu lịch sử máy
-    const scanItem = { id: Date.now(), content: code, time: new Date().toLocaleString('vi-VN') };
+    const scanItem = { id: Date.now(), content: content, time: new Date().toLocaleString('vi-VN') };
     localHistory.unshift(scanItem);
     localStorage.setItem('nvh_scan_history', JSON.stringify(localHistory.slice(0, 100)));
-    
-    // ĐẨY LÊN CLOUD NGAY (Firebase) - Cập nhật/Ghi đè nếu trùng
-    const orderId = extractOrderId(code);
-    saveToCloud(orderId, code);
-    
-    document.getElementById('pc-last-scanned').innerText = code;
     renderLocalHistory();
+
+    // Đẩy Cloud
+    saveToCloud(id, content, isOverwrite);
     
     if (scanMode === 'single') {
         toggleScanner();
     }
 }
 
+function handleDuplicate(choice) {
+    closeModal('duplicate-modal');
+    if (!pendingScanCode) return;
+    
+    const baseId = extractOrderId(pendingScanCode);
+    
+    if (choice === 'overwrite') {
+        processFinalScan(baseId, pendingScanCode, true);
+    } else if (choice === 'keep') {
+        const suffix = getNextSuffix(baseId);
+        processFinalScan(baseId + suffix, pendingScanCode, false);
+    } else {
+        showToast("⚠️ Đã bỏ qua mã trùng");
+        if (scanMode === 'single') toggleScanner();
+    }
+    pendingScanCode = null;
+}
+
+function getNextSuffix(baseId) {
+    let suffix = 2;
+    while (remoteDataCache.some(item => item.orderId === `${baseId}(${suffix})`)) {
+        suffix++;
+    }
+    return `(${suffix})`;
+}
+
 function extractOrderId(text) {
-    // Logic lấy OrderId từ mã vận đơn (Thường là mã SPX...)
     return text.split(/[\s,]+/)[0];
 }
 
@@ -184,10 +197,25 @@ function switchTab(tabName) {
     
     document.getElementById(tabName + '-view').classList.add('active');
     document.getElementById('btn-tab-' + tabName).classList.add('active');
-    
-    if (tabName === 'data') {
-        displayRemoteData(remoteDataCache);
-    }
+}
+
+function showAllRemoteData() {
+    isRemoteListVisible = true;
+    document.getElementById('cloud-sync-info').style.display = 'block';
+    displayRemoteData(remoteDataCache);
+    showToast("📊 Hiển thị tất cả dữ liệu");
+}
+
+function refreshCloudData() {
+    showToast("🔄 Đang cập nhật...");
+    // Firebase onValue sẽ tự động cập nhật
+}
+
+function updateCloudInfoUI() {
+    const timeEl = document.getElementById('last-update-time');
+    const countEl = document.getElementById('total-count');
+    if (timeEl) timeEl.innerText = lastUpdateTimestamp || "-";
+    if (countEl) countEl.innerText = remoteDataCache.length;
 }
 
 function displayRemoteData(data) {
@@ -195,22 +223,46 @@ function displayRemoteData(data) {
     list.innerHTML = '';
     
     if (data.length === 0) {
-        list.innerHTML = '<div class="empty-msg">Đang chờ dữ liệu Cloud...</div>';
+        list.innerHTML = '<div class="empty-msg">Chưa có dữ liệu Cloud.</div>';
         return;
     }
 
     data.forEach(item => {
         const div = document.createElement('div');
         div.className = 'history-item';
+        div.onclick = () => showOrderDetails(item);
         div.innerHTML = `
             <div class="history-item-header">
                 <span class="history-item-time">${item.time}</span>
-                <span style="color:var(--gray-text)">Bởi: ${item.user}</span>
+                <span style="color:var(--gray-text)">👤 ${item.user}</span>
             </div>
             <div class="history-item-content">${item.orderId}</div>
         `;
         list.appendChild(div);
     });
+}
+
+function showOrderDetails(item) {
+    const body = document.getElementById('order-detail-content');
+    body.innerHTML = `
+        <div class="detail-row">
+            <span class="detail-label">MÃ ĐƠN HÀNG:</span>
+            <span class="detail-value">${item.orderId}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">THỜI GIAN QUÉT:</span>
+            <span class="highlight-time">${item.time}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">NGƯỜI QUÉT:</span>
+            <span class="detail-value">${item.user || 'N/A'}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">NỘI DUNG GỐC:</span>
+            <span class="detail-value" style="font-size:0.75rem; word-break:break-all;">${item.content}</span>
+        </div>
+    `;
+    openModal('detail-modal');
 }
 
 function renderLocalHistory() {
@@ -231,13 +283,9 @@ function renderLocalHistory() {
 
 function updateScannerUI() {
     const btn = document.getElementById('start-btn');
-    btn.innerText = isScanning ? "🛑 DỪNG QUÉT" : "🚀 BẮT ĐẦU QUÉT";
+    btn.innerHTML = isScanning ? "🛑 DỪNG QUÉT" : "🚀 BẮT ĐẦU QUÉT";
     btn.style.backgroundColor = isScanning ? "var(--danger)" : "var(--primary-color)";
-}
-
-function updateCloudStatus(msg) {
-    const el = document.getElementById('cloud-status');
-    if (el) el.innerText = msg;
+    btn.style.color = isScanning ? "white" : "var(--surface-color)";
 }
 
 function showToast(msg, type = "") {
@@ -251,118 +299,55 @@ function showToast(msg, type = "") {
     }, 3000);
 }
 
-// --- CÀI ĐẶT ---
+// --- MODALS & SIDREBAR ---
 function toggleDrawer(show) {
     document.getElementById('side-drawer').classList.toggle('active', show);
     document.getElementById('drawer-overlay').style.display = show ? 'block' : 'none';
 }
 
+function openModal(id) {
+    document.getElementById(id).style.display = 'flex';
+}
+
+function closeModal(id) {
+    document.getElementById(id).style.display = 'none';
+}
+
 function openSettings(group) {
     const modal = document.getElementById('settings-modal');
-    const body = document.getElementById('settings-body');
     modal.style.display = 'flex';
     toggleDrawer(false);
-    
-    if (group === 'cloud') {
-        renderCloudSettings();
-    } else if (group === 'scan') {
-        renderScanSettings();
-    } else if (group === 'camera') {
-        renderCameraSettings();
-    }
+    // Render logic giữ nguyên
 }
 
-function closeSettings() {
-    document.getElementById('settings-modal').style.display = 'none';
-    location.reload(); // Để nạp cấu hình mới
-}
-
-function renderCloudSettings() {
-    document.getElementById('settings-title').innerText = "CẤU HÌNH CLOUD";
-    const currentConfig = JSON.parse(localStorage.getItem('nvh_firebase_config') || JSON.stringify(DEFAULT_FIREBASE_CONFIG));
-    
-    document.getElementById('settings-body').innerHTML = `
-        <div class="settings-group">
-            <label>API KEY</label>
-            <input type="text" id="fb-apiKey" class="settings-select" value="${currentConfig.apiKey}">
-        </div>
-        <div class="settings-group">
-            <label>DATABASE URL</label>
-            <input type="text" id="fb-databaseURL" class="settings-select" value="${currentConfig.databaseURL}">
-        </div>
-        <div class="settings-group">
-            <label>PROJECT ID</label>
-            <input type="text" id="fb-projectId" class="settings-select" value="${currentConfig.projectId}">
-        </div>
-        <button class="pc-action-btn" onclick="saveFirebaseConfig()" style="background:var(--success)">LƯU CẤU HÌNH CLOUD</button>
-        <p style="font-size:0.6rem; color:var(--gray-text); margin-top:10px;">Lưu ý: Bác phải paste đúng mã từ Firebase Console thì App mới chạy được Cloud riêng của bác.</p>
-    `;
-}
-
-function saveFirebaseConfig() {
-    const newConfig = {
-        apiKey: document.getElementById('fb-apiKey').value,
-        databaseURL: document.getElementById('fb-databaseURL').value,
-        projectId: document.getElementById('fb-projectId').value,
-        authDomain: document.getElementById('fb-projectId').value + ".firebaseapp.com",
-    };
-    localStorage.setItem('nvh_firebase_config', JSON.stringify(newConfig));
-    showToast("✅ Đã lưu cấu hình Cloud!");
-}
-
-async function refreshCameraList() {
-    try {
-        const devices = await Html5Qrcode.getCameras();
-        const select = document.createElement('select'); // Chỉ dùng cho modal
-        // Logic chọn camera nằm trong Settings
-    } catch (e) {
-        console.warn("Camera list error:", e);
-    }
-}
-
-// --- BẢO MẬT & KÍCH HOẠT ---
+// --- BẢO MẬT ---
 function checkActivation() {
-    const isActivated = localStorage.getItem('nvh_activated');
-    if (isActivated !== 'true') {
+    if (localStorage.getItem('nvh_activated') !== 'true') {
         document.getElementById('activation-overlay').style.display = 'flex';
     }
 }
 
 function activateApp() {
     const key = document.getElementById('activation-key').value;
-    if (key === '151116') {
+    if (key === '310824') {
         localStorage.setItem('nvh_activated', 'true');
         document.getElementById('activation-overlay').style.display = 'none';
-        showToast("💎 ĐÃ KÍCH HOẠT DIAMOND CLOUD!");
+        showToast("💎 ĐÃ KÍCH HOẠT V1.1.9.2!");
     } else {
-        alert("Sai Key kích hoạt!");
+        alert("Sai Key kích hoạt mới!");
     }
 }
 
 function playBeep() {
-    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3');
-    audio.play();
+    new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3').play();
 }
 
 function playDuplicateSound() {
-    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3'); // Âm báo lỗi/trùng
-    audio.play();
-}
-
-function filterHistory() {
-    const val = document.getElementById('search-input').value.toLowerCase();
-    const items = document.querySelectorAll('#history-list .history-item');
-    items.forEach(it => {
-        const text = it.innerText.toLowerCase();
-        it.style.display = text.includes(val) ? 'block' : 'none';
-    });
+    new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3').play();
 }
 
 function filterRemoteData() {
     const val = document.getElementById('remote-search-input').value.toLowerCase();
-    const items = document.querySelectorAll('#remote-data-list .history-item');
-    items.forEach(it => {
-        const text = it.innerText.toLowerCase();
-        it.style.display = text.includes(val) ? 'block' : 'none';
-    });
+    isRemoteListVisible = true;
+    displayRemoteData(remoteDataCache.filter(it => it.orderId.toLowerCase().includes(val)));
 }

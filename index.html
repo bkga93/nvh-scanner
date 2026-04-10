@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>TCT Scanner Pro V1.1.9.1 Cloud | Diamond Edition</title>
-    <link rel="stylesheet" href="style.css?v=1.1.9.1">
+    <title>TCT Scanner Pro V1.1.9.2 Cloud | Diamond Edition</title>
+    <link rel="stylesheet" href="style.css?v=1.1.9.2">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2D0B2D">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -29,7 +29,7 @@
             <button class="tab-btn active" id="btn-tab-scan" onclick="switchTab('scan')">QUÉT MÃ</button>
             <button class="tab-btn" id="btn-tab-history" onclick="switchTab('history')">LỊCH SỬ</button>
             <button class="tab-btn" id="btn-tab-data" onclick="switchTab('data')">DỮ LIỆU</button>
-            <button class="tab-btn" id="btn-tab-review" onclick="switchSwitchTab('review')">XEM LẠI</button>
+            <button class="tab-btn" id="btn-tab-review" onclick="switchTab('review')">XEM LẠI</button>
         </nav>
 
         <main class="tab-content">
@@ -82,9 +82,19 @@
                 </div>
                 <div class="history-header">
                     <h3 id="cloud-status">Dữ liệu Hệ thống</h3>
-                    <button class="refresh-btn" onclick="refreshCloudData()">🔄 LÀM MỚI</button>
+                    <div style="display:flex; gap:10px;">
+                        <button class="refresh-btn" onclick="showAllRemoteData()">📊 TẤT CẢ</button>
+                        <button class="refresh-btn" onclick="refreshCloudData()">🔄 CẬP NHẬT</button>
+                    </div>
                 </div>
-                <div id="remote-data-list" class="history-list"></div>
+                <div id="cloud-sync-info" style="font-size:0.6rem; color:var(--gray-text); margin-bottom:10px; display:none;">
+                    Cập nhật lúc: <span id="last-update-time">-</span> | Tổng số: <span id="total-count">0</span> đơn
+                </div>
+                <div id="remote-data-list" class="history-list">
+                    <div class="empty-msg" style="text-align:center; padding:40px; color:var(--gray-text);">
+                        <p>Nhấn "📊 TẤT CẢ" để xem danh sách đơn</p>
+                    </div>
+                </div>
             </section>
 
             <!-- Review View -->
@@ -97,7 +107,7 @@
         </main>
 
         <footer class="footer">
-            <span>Thực hiện bởi <i>NVH</i> — V1.1.9.1 Cloud Era</span>
+            <span>Thực hiện bởi <i>NVH</i> — V1.1.9.2 Cloud Era</span>
         </footer>
     </div>
 
@@ -144,22 +154,32 @@
             </div>
         </div>
         <div class="drawer-footer">
-            <p style="font-size:0.7rem; color:var(--gray-text); text-align:center;">V1.1.9.1 Diamond Cloud</p>
+            <p style="font-size:0.7rem; color:var(--gray-text); text-align:center;">V1.1.9.2 Diamond Cloud</p>
         </div>
     </div>
 
-    <!-- Unified Settings Modal -->
-    <div id="settings-modal" class="modal-overlay">
-        <div class="modal-content" style="max-height:80vh; overflow-y:auto;">
-            <div class="drawer-header" style="padding:0 0 15px 0;">
-                <h3 id="settings-title">CÀI ĐẶT</h3>
-                <button class="close-modal" onclick="closeSettings()" style="background:none; border:none; color:white; font-size:1.5rem;">×</button>
+    <!-- Duplicate Choice Modal -->
+    <div id="duplicate-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 style="color:var(--danger);">PHÁT HIỆN TRÙNG LẬP!</h2>
+            <p style="margin: 15px 0;">Mã <b id="dup-code-text" style="color:var(--primary-color);"></b> đã tồn tại trên hệ thống.</p>
+            <div class="duplicate-actions">
+                <button class="modal-btn btn-overwrite" onclick="handleDuplicate('overwrite')">GHI ĐÈ DỮ LIỆU</button>
+                <button class="modal-btn btn-keep" onclick="handleDuplicate('keep')">THÊM TIẾP (BẢN SAO)</button>
+                <button class="modal-btn btn-skip" onclick="handleDuplicate('skip')">BỎ QUA</button>
             </div>
-            <div id="settings-body" style="text-align:left;"></div>
-            <button class="pc-action-btn" onclick="closeSettings()" style="margin-top:20px;">HOÀN TẤT</button>
         </div>
     </div>
 
-    <script src="app.js?v=1.1.9.1"></script>
+    <!-- Order Detail Modal -->
+    <div id="detail-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 style="color:var(--primary-color);">CHI TIẾT ĐƠN HÀNG</h2>
+            <div id="order-detail-content" class="detail-info"></div>
+            <button class="pc-action-btn" onclick="closeModal('detail-modal')" style="margin-top:20px;">ĐÓNG</button>
+        </div>
+    </div>
+
+    <script src="app.js?v=1.1.9.2"></script>
 </body>
 </html>
