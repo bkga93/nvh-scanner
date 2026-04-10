@@ -95,18 +95,18 @@ function parseDate(dateStr) {
             else if (p.includes(':')) timePart = p;
         });
 
-        if (datePart && timePart) {
+        if (datePart) {
             const dateBits = datePart.split('/');
-            const timeBits = timePart.split(':');
-            
             if (dateBits.length === 3) {
-                // Hỗ trợ DD/MM/YYYY hoặc D/M/YYYY
                 const day = parseInt(dateBits[0]);
                 const month = parseInt(dateBits[1]) - 1;
                 const year = parseInt(dateBits[2]);
+
+                const timeBits = timePart ? timePart.split(':') : [0,0,0];
                 const h = parseInt(timeBits[0] || 0);
                 const m = parseInt(timeBits[1] || 0);
                 const s = parseInt(timeBits[2] || 0);
+
                 return new Date(year, month, day, h, m, s);
             }
         }
@@ -704,7 +704,7 @@ async function fetchDataFromSheets(isAuto = false) {
         const response = await fetch(APP_SCRIPT_URL + "?t=" + Date.now(), {
             method: "POST",
             cache: "no-store",
-            body: JSON.stringify({ action: "GET_ALL" }),
+            body: JSON.stringify({ action: "getData" }),
             headers: { 'Content-Type': 'text/plain;charset=utf-8' }
         });
         let data = await response.json();
@@ -804,9 +804,15 @@ async function fetchDataFromSheets(isAuto = false) {
     }
 }
 
-function updateLastUpdateTimeDisplay(time) {
+function updateLastUpdateTimeDisplay(timeStr, count = 0) {
     const display = document.getElementById('last-update-display');
-    if (display) display.innerText = "Cập nhật lúc: " + (time || "Chưa rõ");
+    if (display) {
+        if (count > 0) {
+            display.innerText = `Đã tải ${count} đơn lúc ${timeStr}`;
+        } else {
+            display.innerText = `Cập nhật lúc: ${timeStr}`;
+        }
+    }
 }
 
 function displayRemoteData(dataToDisplay = null) {
@@ -1168,7 +1174,7 @@ function previewSound(val) {
 }
 
 window.onload = () => {
-    console.log("🚀 TCT APP V1.1.7.4 - LIVE SYNC EDITION IS LIVE!");
+    console.log("🚀 TCT APP V1.1.7.5 - STABLE SYNC IS LIVE!");
     // Khởi tạo mặc định
     if (localStorage.getItem('nvh_sound_type') === null) {
         localStorage.setItem('nvh_sound_type', 'standard');
