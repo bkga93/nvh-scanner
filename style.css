@@ -771,3 +771,46 @@ input:checked + .slider:before { transform: translateX(20px); }
     50% { opacity: 0.5; transform: scale(1.05); }
     100% { opacity: 1; transform: scale(1); }
 }
+/* Tab Data Buttons v1.1.8.6 */
+.action-group-inline {
+    display: flex;
+    gap: 8px;
+}
+
+.view-all-btn, .download-btn-main {
+    background: var(--primary-color);
+    color: #000;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.view-all-btn:active, .download-btn-main:active {
+    transform: scale(0.95);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+}
+
+.download-btn-main {
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+}
+
+.total-count-header {
+    background: rgba(255, 215, 0, 0.1);
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    color: var(--primary-color);
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    font-size: 0.75rem;
+    text-align: center;
+    font-weight: bold;
+    letter-spacing: 1px;
+}

@@ -740,30 +740,29 @@ async function fetchDataFromSheets(isAuto = false) {
         }
 
         if (data && data.length > 0) {
-            // Chuẩn hóa dữ liệu v1.1.8.5 (Cố định A=Time, B=ID, C=Code)
+            // Chuẩn hóa dữ liệu v1.1.8.6 (Cố định A=Time, B=ID, C=Code)
             data = data.map((row, rowIndex) => {
                 let normalized = { userName: 'Log', content: 'N/A', scanTime: 'N/A', orderId: 'N/A', rowIndex: rowIndex + 1 };
                 
                 if (Array.isArray(row)) {
                     normalized.scanTime = row[0] || 'N/A';
-                    normalized.orderId = row[1] || 'N/A';
-                    normalized.content = row[2] || 'N/A';
+                    normalized.orderId = (row[1] || row[2] || 'N/A').toString(); // Lấy cột B làm ID
+                    normalized.content = (row[2] || row[1] || 'N/A').toString(); // Lấy cột C làm mã đơn
                     normalized.userName = row[1] || 'NoName';
                 } else if (typeof row === 'object') {
                     normalized.scanTime = row.scanTime || row.A || 'N/A';
-                    normalized.orderId = row.orderId || row.B || 'N/A';
-                    normalized.content = row.content || row.C || 'N/A';
+                    normalized.orderId = (row.orderId || row.B || 'N/A').toString();
+                    normalized.content = (row.content || row.C || 'N/A').toString();
                     normalized.userName = row.userName || row.B || 'NoName';
                 }
                 return normalized;
             });
 
-            // LẤY SẠCH 100% (Không lọc bỏ dòng đầu tiên vì có thể là dữ liệu của người dùng)
+            // LẤY SẠCH 100% (Gia cố bộ lọc)
             data = data.filter(item => {
                 const timeStr = (item.scanTime || "").toString().toLowerCase();
-                // Chỉ bỏ qua nếu đúng là chữ "Thời gian" hệ thống
-                if (timeStr === "thời gian" || timeStr === "time") return false; 
-                return item.content !== 'N/A' || item.scanTime !== 'N/A';
+                if (timeStr === "thời gian" || timeStr === "time" || timeStr === "timestamp") return false; 
+                return item.content !== 'N/A' && item.content !== '';
             });
             
             // Sắp xếp
@@ -1189,7 +1188,7 @@ function previewSound(val) {
 }
 
 window.onload = () => {
-    console.log("🚀 TCT APP V1.1.8.5 - FINAL STABLE EDITION IS LIVE!");
+    console.log("🚀 TCT APP V1.1.8.6 - DIAMOND RECONSTRUCTION IS LIVE!");
     // Khởi tạo mặc định
     if (localStorage.getItem('nvh_sound_type') === null) {
         localStorage.setItem('nvh_sound_type', 'standard');
