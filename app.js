@@ -1,4 +1,4 @@
-// TCT SCANNER PRO V1.2.2.3 - CLOUD ERA
+// TCT SCANNER PRO V1.2.2.4 - CLOUD ERA
 // PHIÊN BẢN DIAMOND CLOUD (FIREBASE)
 // ==========================================
 
@@ -64,7 +64,7 @@ const BEEP_NAMES = {
 
 // --- KHỞI TẠO APP ---
 window.onload = async () => {
-    console.log("🚀 TCT APP V1.2.2.3 - CLOUD ERA IS LIVE!");
+    console.log("🚀 TCT APP V1.2.2.4 - CLOUD ERA IS LIVE!");
     applyTheme(settings.theme);
     applyFontSize(settings.fontSize);
     checkActivation(); // Kiểm tra Activation và Mật khẩu truy cập
@@ -466,10 +466,8 @@ function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 function openChangelog() { openModal('changelog-modal'); toggleDrawer(false); }
 
 function checkActivation() { 
-    // Ghép logic Kích hoạt và Mật khẩu truy cập vào một flow
-    if (localStorage.getItem('nvh_auth_skip') !== 'true' && localStorage.getItem('nvh_activated') !== 'true') {
-        openModal('activation-overlay'); 
-    }
+    // Đã gỡ bỏ yêu cầu mật khẩu khi khởi chạy theo yêu cầu người dùng
+    console.log("🔓 Quyền truy cập được mở khóa tự động.");
 }
 function activateApp() {
     const key = document.getElementById('activation-key').value;

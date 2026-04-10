@@ -2,7 +2,10 @@
 
 ---
 
-## [V1.2.2.3] - 10/04/2026 (Hiện tại)
+## [V1.2.2.4] - 10/04/2026 (Hiện tại)
+- **Bảo mật**: Loại bỏ yêu cầu mật khẩu truy cập (`310824`) khi khởi chạy ứng dụng lần đầu. Giúp bác vào việc nhanh hơn.
+
+## [V1.2.2.3] - 10/04/2026
 - **Cài đặt Database**: Bổ sung mốc dọn dẹp chủ động (3 tháng, 6 tháng, 1 năm).
 
 ## [V1.2.2.2] - 10/04/2026
