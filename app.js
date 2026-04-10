@@ -726,26 +726,44 @@ async function fetchDataFromSheets(isAuto = false) {
         }
 
         if (data.length > 0) {
-            // Chuẩn hóa dữ liệu v1.1.8.0 (3 cột: A=User, B=Code, C=Time)
-            data = data.map((item, index) => {
-                let normalized = { userName: '', content: '', scanTime: '', rowIndex: index + 1 };
+            // Chuẩn hóa dữ liệu v1.1.8.1 (SMART MAPPING - TỰ ĐỘNG DÒ CỘT)
+            data = data.map((row, rowIndex) => {
+                let normalized = { userName: 'N/A', content: 'N/A', scanTime: 'N/A', rowIndex: rowIndex + 1 };
                 
-                if (Array.isArray(item)) {
-                    normalized.userName = item[0] || 'N/A';
-                    normalized.content = item[1] || '';
-                    normalized.scanTime = item[2] || '';
-                } else if (typeof item === 'object') {
-                    normalized.userName = item.userName || item.A || 'N/A';
-                    normalized.content = item.content || item.B || '';
-                    normalized.scanTime = item.scanTime || item.C || '';
+                if (Array.isArray(row)) {
+                    row.forEach(cell => {
+                        const val = (cell || "").toString().trim();
+                        if (!val) return;
+                        
+                        // Dò tìm Thời gian (Có dấu gạch chéo hoặc dấu hai chấm)
+                        if (val.includes("/") || val.includes(":")) {
+                            normalized.scanTime = val;
+                        } 
+                        // Dò tìm Mã đơn (Bắt đầu bằng SPX hoặc dài hơn 10 ký tự)
+                        else if (val.toUpperCase().startsWith("SPX") || val.length > 10) {
+                            normalized.content = val;
+                        }
+                        // Còn lại là Tên người dùng (Nhưng không phải là các mã số linh tinh)
+                        else if (val.length > 1 && isNaN(val)) {
+                            normalized.userName = val;
+                        }
+                    });
+                } else if (typeof row === 'object') {
+                    normalized.userName = row.userName || row.A || 'N/A';
+                    normalized.content = row.content || row.B || 'N/A';
+                    normalized.scanTime = row.scanTime || row.C || 'N/A';
                 }
                 return normalized;
             });
 
-            // TẮT BỘ LỌC (Hiện toàn bộ log)
+            // TẮT BỘ LỌC & CHỐNG CRASH
             data = data.filter(item => {
-                if (item.userName.toString().includes("người") || item.userName.toString().includes("NGƯỜI")) return false; // Bỏ qua header
-                return item.content || item.userName;
+                try {
+                    const nameStr = (item.userName || "").toString().toLowerCase();
+                    const contentStr = (item.content || "").toString().toLowerCase();
+                    if (nameStr.includes("người") || nameStr.includes("user")) return false; // Bỏ qua header
+                    return (item.content !== 'N/A' || item.userName !== 'N/A');
+                } catch(e) { return false; }
             });
 
             // Sắp xếp lại theo thời gian mới nhất lên đầu
@@ -1173,7 +1191,7 @@ function previewSound(val) {
 }
 
 window.onload = () => {
-    console.log("🚀 TCT APP V1.1.8.0 - LOG MANAGEMENT EDITION IS LIVE!");
+    console.log("🚀 TCT APP V1.1.8.1 - SMART MAPPING EDITION IS LIVE!");
     // Khởi tạo mặc định
     if (localStorage.getItem('nvh_sound_type') === null) {
         localStorage.setItem('nvh_sound_type', 'standard');
