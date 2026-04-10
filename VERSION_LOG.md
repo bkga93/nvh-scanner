@@ -2,7 +2,12 @@
 
 ---
 
-## [V1.2.2.1] - 10/04/2026 (Hiện tại)
+## [V1.2.2.2] - 10/04/2026 (Hiện tại)
+- **Bảo mật truy cập**: Khôi phục yêu cầu mật khẩu (`310824`) cho lần vào app đầu tiên trên thiết bị mới.
+- **Tên thiết bị tự động**: Tự nhận diện "iPhone", "Android", "Windows"... nếu bác chưa đặt tên người dùng.
+- **Lưu trữ nâng cao**: Thêm mốc lưu trữ 6 tháng và 1 năm cho dữ liệu Cloud.
+
+## [V1.2.2.1] - 10/04/2026
 - **Tinh chỉnh logic mã trùng**: Dừng máy quét ngay khi phát hiện trùng và giữ trạng thái dừng sau khi xử lý (Chờ bấm nút tiếp). Điều này tối ưu hóa luồng làm việc cho bác.
 
 ## [V1.2.2.0] - 10/04/2026

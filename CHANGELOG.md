@@ -4,6 +4,12 @@ Tất cả các thay đổi quan trọng đối với dự án **TCT Scanner Pro
 
 ---
 
+## [1.2.2.2] - 2026-04-10
+### Added
+- **Hệ thống:** Khôi phục Mật khẩu Truy cập (`nvh_auth_skip`) khi vào ứng dụng.
+- **Dữ liệu:** Bổ sung tùy chọn lưu trữ 6 tháng và 1 năm.
+- **UX:** Tự động nhận diện tên thiết bị (iPhone, Android, Windows...) nếu người dùng chưa đặt tên.
+
 ## [1.2.2.1] - 2026-04-10
 ### Fixed
 - **Logic Máy quét:** Dừng máy quét ngay khi phát hiện trùng mã và giữ trạng thái dừng sau khi người dùng chọn hành động (Ghi đè/Bản sao/Bỏ qua). Tránh việc máy quét tự khởi động lại gây phiền hà.

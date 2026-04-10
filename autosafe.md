@@ -4,10 +4,10 @@
 
 ### [1. BỐI CẢNH LÀM VIỆC - CONTEXT]
 ```json
-{"project_status":"Hoàn thành tinh chỉnh mã trùng","current_goal":"Hỗ trợ bác tiếp theo các tính năng khác","core_logic_rules":"Máy quét dừng ngay khi trùng mã và không tự động bật lại sau khi chọn Ghi đè/Bản sao/Bỏ qua.","active_variables":{"version":"V1.2.2.1","scanMode":"tùy chọn single/continuous"}}
+{"project_status":"Hoàn thành V1.2.2.2","current_goal":"Hỗ trợ bác tiếp theo các tính năng khác","core_logic_rules":"Tự động nhận diện thiết bị làm tên User, yêu cầu mật khẩu 310824 khi vào app lần đầu, bổ sung lưu trữ 6 tháng - 1 năm.","active_variables":{"version":"V1.2.2.2"}}
 ```
 
 ### [2. PHIÊN BẢN - VERSIONS]
 ```json
-{"current_version":"V1.2.2.1","last_update":"2026-04-10","changes":["Tinh chỉnh logic dừng máy quét khi trùng mã"]}
+{"current_version":"V1.2.2.2","last_update":"2026-04-10","changes":["Mật khẩu truy cập","Tên thiết bị tự động","Lưu trữ 6 tháng/1 năm"]}
 ```

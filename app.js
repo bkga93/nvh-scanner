@@ -1,5 +1,4 @@
-// ==========================================
-// TCT SCANNER PRO V1.2.2.1 - CLOUD ERA
+// TCT SCANNER PRO V1.2.2.2 - CLOUD ERA
 // PHIÊN BẢN DIAMOND CLOUD (FIREBASE)
 // ==========================================
 
@@ -17,8 +16,18 @@ let lastScanTracker = { code: '', time: 0 };
 const VI_VOICE_FILE = 'Am thanh bao Tieng Viet.mp3'; // File âm thanh thực tế
 
 // --- CÀI ĐẶT NGƯỜI DÙNG ---
+const getDeviceDefaultName = () => {
+    const ua = navigator.userAgent;
+    if (/iPhone/i.test(ua)) return "iPhone";
+    if (/iPad/i.test(ua)) return "iPad";
+    if (/Android/i.test(ua)) return "Android Device";
+    if (/Windows/i.test(ua)) return "Windows PC";
+    if (/Macintosh/i.test(ua)) return "MacBook/iMac";
+    return "Thiết bị khách";
+};
+
 const settings = {
-    userName: localStorage.getItem('nvh_user_name') || 'Admin',
+    userName: localStorage.getItem('nvh_user_name') || getDeviceDefaultName(),
     beepType: localStorage.getItem('nvh_beep_type') || 'default',
     vibrate: localStorage.getItem('nvh_vibrate') === 'true',
     voiceEnabled: localStorage.getItem('nvh_voice_enabled') !== 'false', 
@@ -55,10 +64,10 @@ const BEEP_NAMES = {
 
 // --- KHỞI TẠO APP ---
 window.onload = async () => {
-    console.log("🚀 TCT APP V1.2.2.1 - CLOUD ERA IS LIVE!");
+    console.log("🚀 TCT APP V1.2.2.2 - CLOUD ERA IS LIVE!");
     applyTheme(settings.theme);
     applyFontSize(settings.fontSize);
-    checkActivation();
+    checkActivation(); // Kiểm tra Activation và Mật khẩu truy cập
     initFirebase();
     renderLocalHistory();
     
@@ -341,7 +350,7 @@ function updateScannerUI() {
     b.style.background = isScanning ? "var(--danger)" : "";
 }
 
-// --- SETTINGS v1.2.2.1 ---
+// --- SETTINGS v1.2.2.2 ---
 let currentGroup = '';
 function openSettings(g) {
     if (g === 'database' && prompt("🔐 Mật khẩu Quản trị:") !== '310824') return;
@@ -387,6 +396,8 @@ function openSettings(g) {
                     <select id="set-retention" class="settings-select">
                         <option value="7" ${settings.retention==='7'?'selected':''}>Giữ lại 7 ngày</option>
                         <option value="30" ${settings.retention==='30'?'selected':''}>Giữ lại 30 ngày</option>
+                        <option value="180" ${settings.retention==='180'?'selected':''}>Giữ lại 6 tháng</option>
+                        <option value="365" ${settings.retention==='365'?'selected':''}>Giữ lại 1 năm</option>
                         <option value="all" ${settings.retention==='all'?'selected':''}>Vĩnh viễn</option>
                     </select>
                 </div>
@@ -451,11 +462,18 @@ function openModal(id) { document.getElementById(id).style.display = 'flex'; }
 function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 function openChangelog() { openModal('changelog-modal'); toggleDrawer(false); }
 
-function checkActivation() { if (localStorage.getItem('nvh_activated') !== 'true') openModal('activation-overlay'); }
+function checkActivation() { 
+    // Ghép logic Kích hoạt và Mật khẩu truy cập vào một flow
+    if (localStorage.getItem('nvh_auth_skip') !== 'true' && localStorage.getItem('nvh_activated') !== 'true') {
+        openModal('activation-overlay'); 
+    }
+}
 function activateApp() {
-    if (document.getElementById('activation-key').value === '310824') {
+    const key = document.getElementById('activation-key').value;
+    if (key === '310824') {
         localStorage.setItem('nvh_activated', 'true');
-        closeModal('activation-overlay'); showToast("💎 KÍCH HOẠT THÀNH CÔNG!");
+        localStorage.setItem('nvh_auth_skip', 'true'); // Lưu để bỏ qua mật khẩu lần sau
+        closeModal('activation-overlay'); showToast("💎 KÍCH HOẠT & ĐĂNG NHẬP THÀNH CÔNG!");
     } else alert("Sai mật khẩu!");
 }
 
