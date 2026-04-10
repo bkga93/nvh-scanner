@@ -565,14 +565,15 @@ async function processSyncQueue() {
     isSyncing = true;
     const itemToSync = unsyncedItems[unsyncedItems.length - 1];
     
-    // Chuẩn bị dữ liệu gửi đi v2.3.0
+    // Chuẩn bị dữ liệu gửi đi v1.1.8.0 (3 cột: Người dùng, Mã đơn, Thời gian)
     const payload = {
-        action: itemToSync.action || "APPEND",
-        orderId: itemToSync.orderId,
+        action: "APPEND",
+        userName: localStorage.getItem('nvh_user_name') || 'NoName',
         content: itemToSync.content,
         scanTime: itemToSync.scanTime,
-        endTime: itemToSync.endTime || '',
-        image: itemToSync.evidenceImage ? "IMAGE_DATA" : '' // Không gửi Base64 trực tiếp vào Sheets để tránh lag
+        // Dữ liệu phụ nếu cần (Sheets có thể bỏ qua)
+        orderId: itemToSync.orderId,
+        endTime: itemToSync.endTime || ''
     };
 
     const success = await sendToGoogleSheets(payload);
@@ -725,34 +726,27 @@ async function fetchDataFromSheets(isAuto = false) {
         }
 
         if (data.length > 0) {
-            // Chuẩn hóa dữ liệu v1.1.7.7 (MẠNH MẼ HƠN)
+            // Chuẩn hóa dữ liệu v1.1.8.0 (3 cột: A=User, B=Code, C=Time)
             data = data.map((item, index) => {
-                let normalized = { scanTime: '', orderId: '', content: '', endTime: '', rowIndex: index + 1 };
+                let normalized = { userName: '', content: '', scanTime: '', rowIndex: index + 1 };
                 
                 if (Array.isArray(item)) {
-                    normalized.scanTime = item[0] || '';
-                    normalized.orderId = item[1] || '';
-                    normalized.content = item[2] || '';
-                    normalized.endTime = item[3] || '';
+                    normalized.userName = item[0] || 'N/A';
+                    normalized.content = item[1] || '';
+                    normalized.scanTime = item[2] || '';
                 } else if (typeof item === 'object') {
-                    normalized.scanTime = item.scanTime || item.time || item.A || '';
-                    normalized.orderId = item.orderId || item.id || item.B || '';
-                    normalized.content = item.content || item.code || item.C || '';
-                    normalized.endTime = item.endTime || item.D || '';
+                    normalized.userName = item.userName || item.A || 'N/A';
+                    normalized.content = item.content || item.B || '';
+                    normalized.scanTime = item.scanTime || item.C || '';
                 }
                 return normalized;
             });
 
-            // --- TẮT TẠM THỜI BỘ LỌC 30 NGÀY ĐỂ KIỂM TRA (V1.1.7.7) ---
-            const finalData = data.filter(item => {
-                if (!item.scanTime && !item.content) return false;
-                // Bỏ qua dòng tiêu đề
-                if (item.scanTime && item.scanTime.toString().includes("THỜI GIAN")) return false;
-                return true; 
+            // TẮT BỘ LỌC (Hiện toàn bộ log)
+            data = data.filter(item => {
+                if (item.userName.toString().includes("người") || item.userName.toString().includes("NGƯỜI")) return false; // Bỏ qua header
+                return item.content || item.userName;
             });
-
-            console.log(`📊 Tổng số dòng nhận về sau khi chuẩn hóa: ${finalData.length}`);
-            data = finalData;
 
             // Sắp xếp lại theo thời gian mới nhất lên đầu
             data.sort((a, b) => {
@@ -856,13 +850,13 @@ function displayRemoteData(dataToDisplay = null) {
     }
 
     const listHtml = data.slice(0, limit).map(item => `
-        <div class="history-item ${selectedRemoteItem && selectedRemoteItem.orderId === item.orderId ? 'selected' : ''}" 
+        <div class="history-item ${selectedRemoteItem && selectedRemoteItem.content === item.content ? 'selected' : ''}" 
              onclick='selectRemoteItem(${JSON.stringify(item).replace(/'/g, "&apos;")})'>
             <div class="history-item-header">
-                <strong>ID: ${item.orderId || 'N/A'}</strong>
+                <strong style="color: var(--primary-color)">👤 ${item.userName}</strong>
                 <span class="history-item-time">${item.scanTime}</span>
             </div>
-            <div class="history-item-content">${item.content}</div>
+            <div class="history-item-content" style="font-size: 1.1rem; color: #fff;">📦 ${item.content}</div>
         </div>
     `).join('');
     
@@ -1111,6 +1105,10 @@ function openSettings(group) {
         if (ipSource) ipSource.value = go2rtcSource;
     }
     
+    // Load User Name v1.1.8.0
+    const userNameInput = document.getElementById('user-name-modal');
+    if (userNameInput) userNameInput.value = localStorage.getItem('nvh_user_name') || '';
+    
     toggleDrawer(false);
     modal.style.display = 'flex';
 }
@@ -1148,6 +1146,10 @@ function saveModalSettings() {
     const authReq = document.getElementById('auth-toggle-modal')?.checked;
     if (authReq !== undefined) localStorage.setItem('nvh_auth_skip', !authReq);
     
+    // Lưu Tên người dùng v1.1.8.0
+    const uName = document.getElementById('user-name-modal')?.value;
+    if (uName !== undefined) localStorage.setItem('nvh_user_name', uName.trim());
+    
     // Đồng bộ ngược lại cho cũ
     if (scannerCam) localStorage.setItem('nvh_camera_id', scannerCam);
 
@@ -1171,7 +1173,7 @@ function previewSound(val) {
 }
 
 window.onload = () => {
-    console.log("🚀 TCT APP V1.1.7.7 - DATA RECOVERY EDITION IS LIVE!");
+    console.log("🚀 TCT APP V1.1.8.0 - LOG MANAGEMENT EDITION IS LIVE!");
     // Khởi tạo mặc định
     if (localStorage.getItem('nvh_sound_type') === null) {
         localStorage.setItem('nvh_sound_type', 'standard');
