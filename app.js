@@ -2171,7 +2171,6 @@ function isMobileDevice() {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 }
 
-};
 
 // --- HỆ THỐNG ĐIỀU KHIỂN CAMERA IP (go2rtc & jsQR) v2.2.0 ---
 async function startIPCameraScanner() {
