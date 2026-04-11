@@ -2,7 +2,11 @@
 
 ---
 
-## [V1.2.2.5] - 11/04/2026 (Hiện tại)
+## [V1.2.2.6] - 11/04/2026 (Hiện tại)
+- **Tối ưu hóa**: Giảm độ trễ kích hoạt Camera khi khởi động xuống còn 0.3 giây.
+- **Hiệu suất**: Ưu tiên khởi chạy máy quét trước khi kết nối Firebase.
+
+## [V1.2.2.5] - 11/04/2026
 - **Tính năng mới**: Thêm tùy chọn "Quét khi khởi động" trong phần Cài đặt quét. Giúp camera tự động bật ngay khi mở ứng dụng với chế độ bác đã chọn (Liên tục/Từng mã).
 
 ## [V1.2.2.4] - 10/04/2026

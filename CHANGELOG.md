@@ -4,6 +4,11 @@ Tất cả các thay đổi quan trọng đối với dự án **TCT Scanner Pro
 
 ---
 
+## [1.2.2.6] - 2026-04-11
+### Optimized
+- **Hệ thống:** Tối ưu hóa tốc độ kích hoạt Auto-Scan (giảm delay xuống 0.3s).
+- **Khởi tạo:** Sắp xếp lại thứ tự ưu tiên bật camera ngay khi mở app.
+
 ## [1.2.2.5] - 2026-04-11
 ### Added
 - **Hệ thống:** Tính năng "Quét khi khởi động" (Auto-Scan).
