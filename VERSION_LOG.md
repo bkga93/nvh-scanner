@@ -2,7 +2,10 @@
 
 ---
 
-## [V1.2.2.4] - 10/04/2026 (Hiện tại)
+## [V1.2.2.5] - 11/04/2026 (Hiện tại)
+- **Tính năng mới**: Thêm tùy chọn "Quét khi khởi động" trong phần Cài đặt quét. Giúp camera tự động bật ngay khi mở ứng dụng với chế độ bác đã chọn (Liên tục/Từng mã).
+
+## [V1.2.2.4] - 10/04/2026
 - **Bảo mật**: Loại bỏ yêu cầu mật khẩu truy cập (`310824`) khi khởi chạy ứng dụng lần đầu. Giúp bác vào việc nhanh hơn.
 
 ## [V1.2.2.3] - 10/04/2026

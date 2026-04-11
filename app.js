@@ -1,4 +1,4 @@
-// TCT SCANNER PRO V1.2.2.4 - CLOUD ERA
+// TCT SCANNER PRO V1.2.2.5 - CLOUD ERA
 // PHIÊN BẢN DIAMOND CLOUD (FIREBASE)
 // ==========================================
 
@@ -34,7 +34,9 @@ const settings = {
     theme: localStorage.getItem('nvh_theme') || 'plum-gold',
     fontSize: localStorage.getItem('nvh_font_size') || '100',
     retention: localStorage.getItem('nvh_data_retention') || 'all',
-    firebase: JSON.parse(localStorage.getItem('nvh_firebase_config') || 'null')
+    firebase: JSON.parse(localStorage.getItem('nvh_firebase_config') || 'null'),
+    scanOnStartup: localStorage.getItem('nvh_scan_startup') === 'true',
+    startupScanMode: localStorage.getItem('nvh_startup_scan_mode') || 'continuous'
 };
 
 // --- KHO ÂM THANH SIÊU THỊ ---
@@ -74,6 +76,20 @@ window.onload = async () => {
     document.querySelectorAll('input[name="scanMode"]').forEach(radio => {
         radio.addEventListener('change', (e) => { scanMode = e.target.value; });
     });
+
+    // --- LOGIC QUÉT KHI KHỞI ĐỘNG (V1.2.2.4) ---
+    if (settings.scanOnStartup) {
+        console.log("⚡ Auto-Scan enabled. Initializing...");
+        scanMode = settings.startupScanMode;
+        // Cập nhật UI radio button
+        const radio = document.querySelector(`input[name="scanMode"][value="${scanMode}"]`);
+        if (radio) radio.checked = true;
+        
+        // Đợi một chút để hệ thống ổn định rồi bắt đầu quét
+        setTimeout(() => {
+            if (!isScanning) toggleScanner();
+        }, 1000);
+    }
 };
 
 // --- HỆ THỐNG CLOUD (FIREBASE) ---
@@ -360,6 +376,31 @@ function openSettings(g) {
     b.innerHTML = '';
     
     switch(g) {
+        case 'scan':
+            t.innerText = "CÀI ĐẶT QUÉT";
+            b.innerHTML = `
+                <div class="toggle-container">
+                    <span>Quét khi khởi động:</span>
+                    <label class="switch"><input type="checkbox" id="set-scan-startup" ${settings.scanOnStartup?'checked':''}><span class="slider"></span></label>
+                </div>
+                <div class="settings-group" id="startup-mode-box" style="display: ${settings.scanOnStartup?'block':'none'}; margin-top:15px;">
+                    <label class="settings-label">Chế độ quét khi mở App:</label>
+                    <select id="set-startup-scan-mode" class="settings-select">
+                        <option value="single" ${settings.startupScanMode==='single'?'selected':''}>Quét từng mã</option>
+                        <option value="continuous" ${settings.startupScanMode==='continuous'?'selected':''}>Quét liên tục</option>
+                    </select>
+                </div>
+                <p style="font-size:0.7rem; color:var(--gray-text); margin-top:10px;">
+                    <i>Lưu ý: Camera sẽ tự động bật ngay khi bác vừa mở ứng dụng.</i>
+                </p>
+            `;
+            // Thêm listener cho switch để ẩn/hiện mode
+            setTimeout(() => {
+                document.getElementById('set-scan-startup').addEventListener('change', (e) => {
+                    document.getElementById('startup-mode-box').style.display = e.target.checked ? 'block' : 'none';
+                });
+            }, 100);
+            break;
         case 'audio':
             t.innerText = "ÂM THANH & GIỌNG NÓI";
             let opts = '';
@@ -442,6 +483,11 @@ function saveSettings() {
         settings.retention = document.getElementById('set-retention').value;
         localStorage.setItem('nvh_data_retention', settings.retention);
         window.location.reload();
+    } else if (currentGroup === 'scan') {
+        settings.scanOnStartup = document.getElementById('set-scan-startup').checked;
+        settings.startupScanMode = document.getElementById('set-startup-scan-mode').value;
+        localStorage.setItem('nvh_scan_startup', settings.scanOnStartup);
+        localStorage.setItem('nvh_startup_scan_mode', settings.startupScanMode);
     }
     showToast("💾 Lưu thành công!"); closeModal('settings-modal');
 }

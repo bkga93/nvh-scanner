@@ -4,6 +4,15 @@ Tất cả các thay đổi quan trọng đối với dự án **TCT Scanner Pro
 
 ---
 
+## [1.2.2.5] - 2026-04-11
+### Added
+- **Hệ thống:** Tính năng "Quét khi khởi động" (Auto-Scan).
+- **Cài đặt:** Bổ sung nhóm "Cài đặt quét" để bác quản lý việc tự động bật camera và chọn chế độ mặc định (Từng mã / Liên tục).
+
+## [1.2.2.4] - 2026-04-10
+### Changed
+- **Bảo mật:** Gỡ bỏ yêu cầu mật khẩu truy cập khi khởi chạy ứng dụng lần đầu.
+
 ## [1.2.2.3] - 2026-04-10
 ### Added
 - **UI:** Bổ sung lựa chọn dọn dẹp dữ liệu chủ động (3 tháng, 6 tháng, 1 năm).
