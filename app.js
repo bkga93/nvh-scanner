@@ -70,26 +70,25 @@ window.onload = async () => {
     applyTheme(settings.theme);
     applyFontSize(settings.fontSize);
     checkActivation(); // Kiểm tra Activation và Mật khẩu truy cập
+    // --- LOGIC QUÉT KHI KHỞI ĐỘNG (V1.2.2.5 Tối ưu) ---
+    if (settings.scanOnStartup) {
+        scanMode = settings.startupScanMode;
+        // Cập nhật UI radio button ngay lập tức
+        const radio = document.querySelector(`input[name="scanMode"][value="${scanMode}"]`);
+        if (radio) radio.checked = true;
+        
+        // Kích hoạt camera nhanh hơn
+        setTimeout(() => {
+            if (!isScanning) toggleScanner();
+        }, 300);
+    }
+
     initFirebase();
     renderLocalHistory();
     
     document.querySelectorAll('input[name="scanMode"]').forEach(radio => {
         radio.addEventListener('change', (e) => { scanMode = e.target.value; });
     });
-
-    // --- LOGIC QUÉT KHI KHỞI ĐỘNG (V1.2.2.4) ---
-    if (settings.scanOnStartup) {
-        console.log("⚡ Auto-Scan enabled. Initializing...");
-        scanMode = settings.startupScanMode;
-        // Cập nhật UI radio button
-        const radio = document.querySelector(`input[name="scanMode"][value="${scanMode}"]`);
-        if (radio) radio.checked = true;
-        
-        // Đợi một chút để hệ thống ổn định rồi bắt đầu quét
-        setTimeout(() => {
-            if (!isScanning) toggleScanner();
-        }, 1000);
-    }
 };
 
 // --- HỆ THỐNG CLOUD (FIREBASE) ---
